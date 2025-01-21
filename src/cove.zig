@@ -79,7 +79,13 @@ pub fn main() !void {
     var timestamps_defined: Timestamps.Defined = .{};
 
     const loop = true; // debug switch
-    while (loop) : (output.text_index = 0) {
+    while (loop) {
+        defer {
+            result.clearRetainingCapacity();
+            std.time.sleep(std.time.ns_per_s); // one second
+            output.text_index = 0;
+        }
+
         for (output.config.module_list.items, 0..) |module, i| {
             if (i != 0) try result.append(' ');
             try output.handleModule(
@@ -90,9 +96,6 @@ pub fn main() !void {
         }
 
         try stdout.print("{s}\n", .{result.items});
-        result.clearRetainingCapacity();
-
-        std.time.sleep(std.time.ns_per_s); // one second
     }
 }
 
