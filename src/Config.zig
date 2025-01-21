@@ -336,12 +336,29 @@ fn toNanoseconds(num: u64, unit: []const u8) !u64 {
         num * 1_000_000
     else if (std.mem.eql(u8, unit, "us"))
         num * 1000
-    else if (std.mem.eql(u8, unit, "n"))
+    else if (std.mem.eql(u8, unit, "ns"))
         num
     else {
         try stderr.print("Error: invalid unit ‘{s}’\n", .{unit});
         std.process.exit(1);
     };
+}
+
+test toNanoseconds {
+    try expectEqual(toNanoseconds(1, "s"), 1_000_000_000);
+    try expectEqual(toNanoseconds(1, "ms"), 1_000_000);
+    try expectEqual(toNanoseconds(1, "us"), 1000);
+    try expectEqual(toNanoseconds(1, "ns"), 1);
+
+    try expectEqual(toNanoseconds(0, "s"), 0);
+    try expectEqual(toNanoseconds(0, "ms"), 0);
+    try expectEqual(toNanoseconds(0, "us"), 0);
+    try expectEqual(toNanoseconds(0, "ns"), 0);
+
+    try expectEqual(toNanoseconds(9, "s"), 9_000_000_000);
+    try expectEqual(toNanoseconds(99, "ms"), 99_000_000);
+    try expectEqual(toNanoseconds(999, "us"), 999_000);
+    try expectEqual(toNanoseconds(9999, "ns"), 9999);
 }
 
 // -------------------------------------------------------------------------- //
