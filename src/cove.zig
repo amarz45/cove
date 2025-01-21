@@ -73,6 +73,8 @@ pub fn main() !void {
     };
 
     var result: std.ArrayList(u8) = .init(allocator);
+    defer if (builtin.mode == .Debug) result.deinit();
+
     var timestamps: Timestamps = undefined;
     var timestamps_defined: Timestamps.Defined = .{};
 
@@ -87,8 +89,8 @@ pub fn main() !void {
             );
         }
 
-        const slice = try result.toOwnedSlice();
-        try stdout.print("{s}\n", .{slice});
+        try stdout.print("{s}\n", .{result.items});
+        result.clearRetainingCapacity();
 
         std.time.sleep(std.time.ns_per_s); // one second
     }
