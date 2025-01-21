@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "cove",
-        .root_source_file = b.path("src/rivulet.zig"),
+        .root_source_file = b.path("src/cove.zig"),
         .target = target,
         .optimize = optimize,
     });
