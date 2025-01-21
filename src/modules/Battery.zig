@@ -13,6 +13,7 @@ const Status = enum(u8) {
     charging     = 'C',
     discharging  = 'D',
     not_charging = 'N',
+    _,
 };
 
 pub const time_len = "999 h 59 m 59 s".len;

@@ -176,6 +176,20 @@ pub fn updateBattery(
             }
             try result_ptr.appendSlice(output_ptr.battery_capacity.slice());
         },
+        .status => {
+            if (update_needed) {
+                const status = switch (battery.status) {
+                    .charging     => "Charging",
+                    .discharging  => "Discharging",
+                    .not_charging => "Not charging",
+                    else          => "Unknown",
+                };
+                output_ptr.battery_status.clear();
+                const writer = output_ptr.battery_status.writer();
+                _ = try writer.write(status);
+            }
+            try result_ptr.appendSlice(output_ptr.battery_status.slice());
+        },
         .time_remaining => {
             if (update_needed) {
                 output_ptr.battery_time_remaining.clear();

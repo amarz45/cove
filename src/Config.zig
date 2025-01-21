@@ -37,6 +37,7 @@ pub const Variable = enum(u8) {
     percent,
     remaining,
     remaining_percent,
+    status,
     time_remaining,
     total,
     used,
@@ -312,6 +313,8 @@ fn varFromStr(str: []const u8) !Variable {
         .remaining
     else if (std.mem.eql(u8, str, "remaining%"))
         .remaining_percent
+    else if (std.mem.eql(u8, str, "status"))
+        .status
     else if (std.mem.eql(u8, str, "time_remaining"))
         .time_remaining
     else if (std.mem.eql(u8, str, "total"))
