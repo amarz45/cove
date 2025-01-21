@@ -78,7 +78,7 @@ pub fn main() !void {
     var timestamps: Timestamps = undefined;
     var timestamps_defined: Timestamps.Defined = .{};
 
-    const loop = true; // debugging switch
+    const loop = true; // debug switch
     while (loop) : (output.text_index = 0) {
         for (output.config.module_list.items, 0..) |module, i| {
             if (i != 0) try result.append(' ');
