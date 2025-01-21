@@ -1,10 +1,9 @@
 pub const Backlight = @import("Backlight.zig");
 pub const Cpu = @import("Cpu.zig");
 pub const Memory = @import("Memory.zig");
-const root = @This();
 
 test {
-    @import("std").testing.refAllDecls(root);
+    @import("std").testing.refAllDecls(@This());
 }
 
 // -------------------------------------------------------------------------- //
