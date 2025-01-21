@@ -1,8 +1,9 @@
 pub const Output = @import("Output.zig");
-pub const modules = @import("modules");
+const modules = @import("modules.zig");
 
 test {
     @import("std").testing.refAllDecls(@This());
+    @import("std").testing.refAllDecls(modules);
 }
 
 // -------------------------------------------------------------------------- //

@@ -1,7 +1,7 @@
 const builtin = @import("builtin");
 const std = @import("std");
 const zeit = @import("zeit"); // time
-const modules = @import("modules");
+const modules = @import("modules.zig");
 const Config = @import("Config.zig");
 const Output = @import("Output.zig");
 const Timestamps = @import("Timestamps.zig");

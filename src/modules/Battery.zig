@@ -1,5 +1,5 @@
 const std = @import("std");
-const io = @import("io.zig");
+const io = @import("../io.zig");
 const Battery = @This();
 
 capacity:       u8,

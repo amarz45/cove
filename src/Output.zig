@@ -1,6 +1,6 @@
 const std = @import("std");
 const zeit = @import("zeit");
-const modules = @import("modules");
+const modules = @import("modules.zig");
 const markup = @import("markup.zig");
 const fmt = @import("fmt.zig");
 const Config = @import("Config.zig");

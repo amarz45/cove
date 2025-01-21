@@ -16,34 +16,21 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const modules = b.addModule("modules", .{
-        .root_source_file = b.path("src/modules/modules.zig"),
-    });
-
     exe.linkLibC();
     exe.linkSystemLibrary("scfg");
 
     exe.root_module.addImport("zeit", zeit.module("zeit"));
-    exe.root_module.addImport("modules", modules);
 
     const tests = b.addTest(.{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
-    const tests_modules = b.addTest(.{
-        .root_source_file = b.path("src/modules/root.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
 
-    tests.root_module.addImport("modules", modules);
     const run_tests = b.addRunArtifact(tests);
-    const new_run_tests = b.addRunArtifact(tests_modules);
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_tests.step);
-    test_step.dependOn(&new_run_tests.step);
 
     b.installArtifact(exe);
 }

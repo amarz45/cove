@@ -1,10 +1,7 @@
-pub const Backlight = @import("Backlight.zig");
-pub const Cpu = @import("Cpu.zig");
-pub const Memory = @import("Memory.zig");
-
-test {
-    @import("std").testing.refAllDecls(@This());
-}
+pub const Backlight = @import("modules/Backlight.zig");
+pub const Battery = @import("modules/Battery.zig");
+pub const Cpu = @import("modules/Cpu.zig");
+pub const Memory = @import("modules/Memory.zig");
 
 // -------------------------------------------------------------------------- //
 // Cove
