@@ -78,8 +78,7 @@ pub fn main() !void {
     var timestamps: Timestamps = undefined;
     var timestamps_defined: Timestamps.Defined = .{};
 
-    const loop = true; // debug switch
-    while (loop) {
+    while (true) {
         defer {
             result.clearRetainingCapacity();
             std.time.sleep(std.time.ns_per_s); // one second
