@@ -14,25 +14,12 @@ time:      i128,
 /// This structure is used to check if the timestamps are defined. If they’re
 /// not, that means that we’re on the first update interval so we must
 /// initialize the timestamp.
-pub const Defined = struct {
-    timestamps: u8 = 0,
-
-    //= Wrappers for bitwise arithmetic.
-    pub inline fn set(defined: *Defined, flags: Flags) void {
-        defined.timestamps |= @intFromEnum(flags);
-    }
-
-    pub inline fn isDefined(defined: Defined, flags: Flags) bool {
-        return defined.timestamps & @intFromEnum(flags) != 0;
-    }
-
-    const Flags = enum(u8) {
-        backlight = 1 << 0,
-        battery   = 1 << 1,
-        cpu       = 1 << 2,
-        memory    = 1 << 3,
-        time      = 1 << 4,
-    };
+pub const Defined = packed struct {
+    backlight: bool = false,
+    battery:   bool = false,
+    cpu:       bool = false,
+    memory:    bool = false,
+    time:      bool = false,
 };
 
 /// An update is needed if the given timestamp is undefined or we have reached
@@ -43,12 +30,10 @@ pub fn isUpdateNeeded(
     interval: u64,
     comptime field: []const u8,
 ) bool {
-    const is_defined = defined_ptr.isDefined(@field(Defined.Flags, field));
-
     const timestamp_old = @field(timestamps_ptr, field);
     const timestamp_new = std.time.nanoTimestamp();
 
-    if (is_defined) {
+    if (@field(defined_ptr, field)) {
         if (timestamp_new - timestamp_old >= interval) {
             @field(timestamps_ptr, field) = timestamp_new;
             return true;
@@ -56,7 +41,7 @@ pub fn isUpdateNeeded(
         return false;
     }
 
-    defined_ptr.set(@field(Defined.Flags, field));
+    @field(defined_ptr, field) = true;
     @field(timestamps_ptr, field) = timestamp_new;
     return true;
 }

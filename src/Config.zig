@@ -52,22 +52,10 @@ pub const ModuleIntervals = struct {
     time:      u64,
 };
 
-pub const ModulesUsed = struct {
-    flags: u8 = 0,
-
-    const Flags = enum(u8) {
-        backlight = 1 << 0,
-        cpu       = 1 << 1,
-        time      = 1 << 2,
-    };
-
-    pub inline fn set(modules_used: ModulesUsed, flag: Flags) ModulesUsed {
-        return .{ .flags = modules_used.flags | @intFromEnum(flag) };
-    }
-
-    pub inline fn isUsed(modules_used: ModulesUsed, flag: Flags) bool {
-        return modules_used.flags & @intFromEnum(flag) != 0;
-    }
+pub const ModulesUsed = packed struct {
+    backlight: bool = false,
+    cpu:       bool = false,
+    time:      bool = false,
 };
 
 pub fn parseConfig(
@@ -90,8 +78,8 @@ pub fn parseConfig(
     var modules_used: ModulesUsed = .{};
 
     {var i: usize = 0; while (i < directives_len) : (i += 1) {
-        modules_used = try parseModule(
-            config_ptr, &output.directives[i], modules_used,
+        try parseModule(
+            config_ptr, &output.directives[i], &modules_used,
             module_intervals_ptr
         );
     }}
@@ -102,9 +90,9 @@ pub fn parseConfig(
 fn parseModule(
     config_ptr: *Config,
     module_cfg: *allowzero c.scfg_directive,
-    modules_used: ModulesUsed,
+    modules_used_ptr: *ModulesUsed,
     module_intervals_ptr: *ModuleIntervals,
-) !ModulesUsed {
+) !void {
     const name = std.mem.span(module_cfg.name);
     const params_len = module_cfg.params_len;
 
@@ -116,7 +104,7 @@ fn parseModule(
             std.process.exit(1);
         }
         config_ptr.module_list.appendAssumeCapacity(.separator);
-        return modules_used;
+        return;
     }
 
     if (params_len == 0) {
@@ -127,7 +115,7 @@ fn parseModule(
     if (std.mem.eql(u8, name, "text")) {
         config_ptr.module_list.appendAssumeCapacity(.text);
         try config_ptr.str_list.append(try .fromSlice("Example"));
-        return modules_used;
+        return;
     }
 
     var interval: u64 = std.time.ns_per_s;
@@ -160,20 +148,18 @@ fn parseModule(
         try parseParamGeneric(
             config_ptr, module_intervals_ptr, interval, param, "backlight"
         );
-        return modules_used.set(.backlight);
-    } if (std.mem.eql(u8, name, "cpu")) {
+        modules_used_ptr.backlight = true;
+    } else if (std.mem.eql(u8, name, "cpu")) {
         try parseParamGeneric(
             config_ptr, module_intervals_ptr, interval, param, "cpu"
         );
-        return modules_used.set(.cpu);
-    } if (std.mem.eql(u8, name, "time")) {
+        modules_used_ptr.cpu = true;
+    } else if (std.mem.eql(u8, name, "time")) {
         try parseParamGeneric(
             config_ptr, module_intervals_ptr, interval, param, "time"
         );
-        return modules_used.set(.time);
-    }
-
-    if (std.mem.eql(u8, name, "battery")) {
+        modules_used_ptr.time = true;
+    } else if (std.mem.eql(u8, name, "battery")) {
         try parseParamGeneric(
             config_ptr, module_intervals_ptr, interval, param, "battery"
         );
@@ -185,8 +171,6 @@ fn parseModule(
         try stderr.print("Error: invalid module {s}.\n", .{name});
         std.process.exit(1);
     }
-
-    return modules_used;
 }
 
 fn parseParamGeneric(

@@ -35,7 +35,7 @@ pub fn main() !void {
     // CPU
     var cpu_data: modules.Cpu = undefined;
     const threads: f32 = threads: {
-        if (!modules_used.isUsed(.cpu)) {
+        if (!modules_used.cpu) {
             break :threads undefined;
         }
         try cpu_data.updateUptime();
@@ -44,20 +44,20 @@ pub fn main() !void {
 
     // time
     var local = local: {
-        if (!modules_used.isUsed(.time)) {
+        if (!modules_used.time) {
             break :local undefined;
         }
         var env = try std.process.getEnvMap(allocator);
         defer env.deinit();
         break :local try zeit.local(allocator, &env);
     };
-    defer if (builtin.mode == .Debug and modules_used.isUsed(.time)) {
+    defer if (builtin.mode == .Debug and modules_used.time) {
         local.deinit();
     };
 
     // backlight
     const backlight_dir_name = backlight_dir_name: {
-        if (!modules_used.isUsed(.backlight)) {
+        if (!modules_used.backlight) {
             break :backlight_dir_name undefined;
         }
 
