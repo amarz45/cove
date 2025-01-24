@@ -175,7 +175,7 @@ inline fn hoursMinutesSeconds(hours_total: f32) struct {
 // Separate an irrational number of minutes into integer minutes and seconds.
 inline fn minutesSeconds(minutes_total: f32) struct {
     minutes: f32,
-    seconds: f32
+    seconds: f32,
 } {
     const minutes = @trunc(minutes_total);
     const seconds = @round((minutes_total - minutes) * 60);
