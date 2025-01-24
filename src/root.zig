@@ -1,3 +1,4 @@
+pub const fmt = @import("fmt.zig");
 pub const Output = @import("Output.zig");
 const modules = @import("modules.zig");
 

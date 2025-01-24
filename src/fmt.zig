@@ -1,11 +1,40 @@
 const std = @import("std");
 
+const expectEqualStrings = std.testing.expectEqualStrings;
+
 pub const percent_len = "100 %".len;
 pub const memory_len = "1024 KiB".len;
 pub const time_len = "999 d 23 h 59 m 59 s".len;
 
 pub inline fn percent(writer: anytype, _percent: anytype) !void {
     try writer.print("{d:.0} %", .{_percent});
+}
+
+test percent {
+    var array: std.BoundedArray(u8, percent_len) = .{};
+
+    try percent(array.writer(), 0);
+    try expectEqualStrings(array.slice(), "0 %");
+
+    array.clear();
+    try percent(array.writer(), 0.0);
+    try expectEqualStrings(array.slice(), "0 %");
+
+    array.clear();
+    try percent(array.writer(), 10);
+    try expectEqualStrings(array.slice(), "10 %");
+
+    array.clear();
+    try percent(array.writer(), 10.0);
+    try expectEqualStrings(array.slice(), "10 %");
+
+    array.clear();
+    try percent(array.writer(), 100);
+    try expectEqualStrings(array.slice(), "100 %");
+
+    array.clear();
+    try percent(array.writer(), 100.0);
+    try expectEqualStrings(array.slice(), "100 %");
 }
 
 // Given a buffer and the memory amount in kibibytes, write to the buffer a
@@ -35,6 +64,49 @@ pub fn memory(writer: anytype, _mem: f32) !void {
     } else {
         try writer.print("{d:.0} {s}", .{mem, unit});
     }
+}
+
+test memory {
+    var array: std.BoundedArray(u8, memory_len) = .{};
+
+    try memory(array.writer(), 0);
+    try expectEqualStrings(array.slice(), "0.00 KiB");
+
+    array.clear();
+    try memory(array.writer(), 9);
+    try expectEqualStrings(array.slice(), "9.00 KiB");
+
+    array.clear();
+    try memory(array.writer(), 10);
+    try expectEqualStrings(array.slice(), "10.0 KiB");
+
+    array.clear();
+    try memory(array.writer(), 99);
+    try expectEqualStrings(array.slice(), "99.0 KiB");
+
+    array.clear();
+    try memory(array.writer(), 100);
+    try expectEqualStrings(array.slice(), "100 KiB");
+
+    array.clear(); 
+    try memory(array.writer(), 1000);
+    try expectEqualStrings(array.slice(), "1000 KiB");
+
+    array.clear(); 
+    try memory(array.writer(), 1023);
+    try expectEqualStrings(array.slice(), "1023 KiB");
+
+    array.clear();
+    try memory(array.writer(), 1 << 10);
+    try expectEqualStrings(array.slice(), "1.00 MiB");
+
+    array.clear();
+    try memory(array.writer(), 1 << 20);
+    try expectEqualStrings(array.slice(), "1.00 GiB");
+
+    array.clear();
+    try memory(array.writer(), 1 << 30);
+    try expectEqualStrings(array.slice(), "1.00 TiB");
 }
 
 pub fn time(writer: anytype, seconds_total: f32) !void {
@@ -109,31 +181,6 @@ inline fn minutesSeconds(minutes_total: f32) struct {
     const seconds = @round((minutes_total - minutes) * 60);
     return .{ .minutes = minutes, .seconds = seconds };
 }
-
-const expectEqualStrings = std.testing.expectEqualStrings;
-
-//test "percent" {
-    //try expectEqualStrings((try percent(0)).slice(),     "0 %");
-    //try expectEqualStrings((try percent(0.0)).slice(),   "0 %");
-    //try expectEqualStrings((try percent(10)).slice(),    "10 %");
-    //try expectEqualStrings((try percent(10.0)).slice(),  "10 %");
-    //try expectEqualStrings((try percent(100)).slice(),   "100 %");
-    //try expectEqualStrings((try percent(100.0)).slice(), "100 %");
-//}
-
-//test "memory" {
-    //try expectEqualStrings((try memory(0)).slice(),    "0.00 KiB");
-    //try expectEqualStrings((try memory(9)).slice(),    "9.00 KiB");
-    //try expectEqualStrings((try memory(10)).slice(),   "10.0 KiB");
-    //try expectEqualStrings((try memory(99)).slice(),   "99.0 KiB");
-    //try expectEqualStrings((try memory(100)).slice(),  "100 KiB");
-    //try expectEqualStrings((try memory(1000)).slice(), "1000 KiB");
-    //try expectEqualStrings((try memory(1023)).slice(), "1023 KiB");
-//
-    //try expectEqualStrings((try memory(1 << 10)).slice(), "1.00 MiB");
-    //try expectEqualStrings((try memory(1 << 20)).slice(), "1.00 GiB");
-    //try expectEqualStrings((try memory(1 << 30)).slice(), "1.00 TiB");
-//}
 
 // -------------------------------------------------------------------------- //
 // Cove
