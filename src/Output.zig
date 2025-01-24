@@ -21,6 +21,7 @@ memory_used:            ArrayMemory        = undefined,
 battery_time_remaining: ArrayBatteryTime   = undefined,
 battery_status:         ArrayBatteryStatus = undefined,
 
+uptime:                 ArrayUptime        = undefined,
 time:                   ArrayTime          = undefined,
 
 text_index:             u64                = 0,
@@ -29,6 +30,7 @@ const ArrayPercent = std.BoundedArray(u8, fmt.percent_len);
 const ArrayMemory = std.BoundedArray(u8, fmt.memory_len);
 const ArrayBatteryTime = std.BoundedArray(u8, modules.Battery.time_len);
 const ArrayBatteryStatus = std.BoundedArray(u8, "Not charging".len);
+const ArrayUptime = std.BoundedArray(u8, fmt.time_len);
 const ArrayTime = std.BoundedArray(u8, 128);
 
 pub fn handleModule(
@@ -266,6 +268,14 @@ pub fn updateCpu(
 
     const config = output_ptr.config;
     for (config.cpu_list.items) |arg| switch (arg) {
+        .uptime => {
+            if (update_needed) {
+                output_ptr.uptime.clear();
+                try fmt.time(output_ptr.uptime.writer(), cpu.system_up);
+            }
+            try result_ptr.appendSlice(output_ptr.uptime.slice());
+            //std.debug.print("{d}\n", .{cpu.system_up});
+        },
         .used_percent => {
             if (update_needed) {
                 output_ptr.cpu_usage.clear();

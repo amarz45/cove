@@ -40,6 +40,7 @@ pub const Variable = enum(u8) {
     status,
     time_remaining,
     total,
+    uptime,
     used,
     used_percent,
 };
@@ -303,6 +304,8 @@ fn varFromStr(str: []const u8) !Variable {
         .time_remaining
     else if (std.mem.eql(u8, str, "total"))
         .total
+    else if (std.mem.eql(u8, str, "uptime"))
+        .uptime
     else if (std.mem.eql(u8, str, "used"))
         .used
     else if (std.mem.eql(u8, str, "used%"))

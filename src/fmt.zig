@@ -2,6 +2,7 @@ const std = @import("std");
 
 pub const percent_len = "100 %".len;
 pub const memory_len = "1024 KiB".len;
+pub const time_len = "999 d 23 h 59 m 59 s".len;
 
 pub inline fn percent(writer: anytype, _percent: anytype) !void {
     try writer.print("{d:.0} %", .{_percent});
@@ -34,6 +35,79 @@ pub fn memory(writer: anytype, _mem: f32) !void {
     } else {
         try writer.print("{d:.0} {s}", .{mem, unit});
     }
+}
+
+pub fn time(writer: anytype, seconds_total: f32) !void {
+    @setFloatMode(.optimized);
+
+    if (seconds_total < 60) {
+        try writer.print("{d:.0} s", .{seconds_total});
+    } else if (seconds_total < 60*60) {
+        const minutes_total = seconds_total / 60;
+        const data = minutesSeconds(minutes_total);
+
+        try writer.print("{d} m {d:02} s", .{data.minutes, data.seconds});
+    } else if (seconds_total < 60*60*24) {
+        @branchHint(.likely);
+
+        const hours_total = seconds_total / (60*60);
+        const data = hoursMinutesSeconds(hours_total);
+
+        try writer.print(
+            "{d} h {d:02} m {d:02} s",
+            .{data.hours, data.minutes, data.seconds}
+        );
+    } else {
+        const days_total = seconds_total / (60*60*24);
+        const data = daysHoursMinutesSeconds(days_total);
+
+        try writer.print(
+            "{d} d {d:02} h {d:02} m {d:02} s",
+            .{data.days, data.hours, data.minutes, data.seconds}
+        );
+    }
+}
+
+// Separate an irrational number of days into integer days, hours, minutes, and
+// seconds.
+inline fn daysHoursMinutesSeconds(days_total: f32) struct {
+    days:    f32,
+    hours:   f32,
+    minutes: f32,
+    seconds: f32,
+} {
+    const days = @trunc(days_total);
+    const hours_total = (days_total - days) * 24;
+    const data = hoursMinutesSeconds(hours_total);
+    return .{
+        .days    = days,
+        .hours   = data.hours,
+        .minutes = data.minutes,
+        .seconds = data.seconds,
+    };
+}
+
+// Separate an irrational number of hours into integer hours, minutes, and
+// seconds.
+inline fn hoursMinutesSeconds(hours_total: f32) struct {
+    hours:   f32,
+    minutes: f32,
+    seconds: f32,
+} {
+    const hours = @trunc(hours_total);
+    const minutes_total = (hours_total - hours) * 60;
+    const data = minutesSeconds(minutes_total);
+    return .{ .hours = hours, .minutes = data.minutes, .seconds = data.seconds };
+}
+
+// Separate an irrational number of minutes into integer minutes and seconds.
+inline fn minutesSeconds(minutes_total: f32) struct {
+    minutes: f32,
+    seconds: f32
+} {
+    const minutes = @trunc(minutes_total);
+    const seconds = @round((minutes_total - minutes) * 60);
+    return .{ .minutes = minutes, .seconds = seconds };
 }
 
 const expectEqualStrings = std.testing.expectEqualStrings;
