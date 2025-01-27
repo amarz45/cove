@@ -15,7 +15,8 @@ pub fn updateUptime(cpu_ptr: *Cpu) !void {
 
     var end_index = try file.pread(&buf, 0) - 1;
     if (buf[end_index] != '\n') end_index += 1;
-    const sep_index = std.mem.indexOfScalar(u8, &buf, ' ').?;
+    const sep_index = std.mem.indexOfScalar(u8, &buf, ' ') orelse
+        @panic("/proc/uptime: space not found.");
 
     // system uptime in seconds
     const system_up = try std.fmt

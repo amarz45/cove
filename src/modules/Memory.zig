@@ -23,7 +23,7 @@ pub fn getUsed(memory: *const Memory) f32 {
 // Get an entry from `/proc/meminfo`. This is very inefficient because we are
 // re-reading the file for each entry, but I plan to use syscalls for most
 // memory information in the future.
-fn get_entry(entry: []const u8) !f32 {
+fn get_entry(comptime entry: []const u8) !f32 {
     var file = try std.fs.cwd().openFile("/proc/meminfo", .{});
     defer file.close();
 
@@ -31,11 +31,13 @@ fn get_entry(entry: []const u8) !f32 {
     const close_index = try file.pread(&buf, 0);
     const slice = buf[0..close_index];
 
-    const slice_index = std.mem.indexOf(u8, slice, entry).?;
+    const slice_index = std.mem.indexOf(u8, slice, entry) orelse
+        @panic("/proc/meminfo: entry ‘"++entry++"’ not found.");
 
     const slice_no_entry = buf[(slice_index + entry.len)..];
     const slice_no_spaces = std.mem.trimLeft(u8, slice_no_entry, " ");
-    const unit_index = std.mem.indexOfScalar(u8, slice_no_spaces, 'k').?;
+    const unit_index = std.mem.indexOfScalar(u8, slice_no_spaces, 'k') orelse
+        @panic("/proc/meminfo: unit not found for entry ‘"++entry++"’.");
     const slice_num = slice_no_spaces[0..(unit_index - 1)];
 
     return try std.fmt.parseFloat(f32, slice_num);

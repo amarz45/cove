@@ -43,9 +43,10 @@ test "backlight" {
     defer base_dir.close();
 
     var iter = base_dir.iterate();
-    const entry = try iter.next();
+    const entry = try iter.next() orelse
+        @panic("Backlight directory not found.");
 
-    const dir_name = entry.?.name;
+    const dir_name = entry.name;
     const backlight: Self = try .init(dir_name);
 
     try expect(backlight.percent >= 0);

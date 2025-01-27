@@ -68,8 +68,9 @@ pub fn main() !void {
         defer backlight_base_dir.close();
 
         var backlight_iter = backlight_base_dir.iterate();
-        const backlight_entry = try backlight_iter.next();
-        break :backlight_dir_name backlight_entry.?.name;
+        const backlight_entry = try backlight_iter.next() orelse
+            @panic("Backlight directory not found.");
+        break :backlight_dir_name backlight_entry.name;
     };
 
     var result: std.ArrayList(u8) = .init(allocator);
