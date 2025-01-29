@@ -39,23 +39,17 @@ test percent {
 
 // Given a buffer and the memory amount in kibibytes, write to the buffer a
 // string with the amount in a human-readable format with the appropriate unit.
-pub fn memory(writer: anytype, _mem: f32) !void {
+pub fn memory(writer: anytype, kibibytes: f32) !void {
     @setFloatMode(.optimized);
-    var mem = _mem;
 
-    const unit = unit: {
-        if (mem < 1 << 10) {
-            break :unit "KiB";
-        } if (mem < 1 << 20) {
-            mem /= 1 << 10;
-            break :unit "MiB";
-        } if (mem < 1 << 30) {
-            mem /= 1 << 20;
-            break :unit "GiB";
-        }
-        mem /= 1 << 30;
-        break :unit "TiB";
-    };
+    const mem, const unit = if (kibibytes < 1 << 10)
+        .{kibibytes, "KiB"}
+    else if (kibibytes < 1 << 20)
+        .{kibibytes / (1 << 10), "MiB"}
+    else if (kibibytes < 1 << 30)
+        .{kibibytes / (1 << 20), "GiB"}
+    else
+        .{kibibytes / (1 << 30), "TiB"};
 
     if (mem < 10) {
         try writer.print("{d:.2} {s}", .{mem, unit});
