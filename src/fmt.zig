@@ -42,14 +42,21 @@ test percent {
 pub fn memory(writer: anytype, kibibytes: f32) !void {
     @setFloatMode(.optimized);
 
-    const mem, const unit = if (kibibytes < 1 << 10)
-        .{kibibytes, "KiB"}
-    else if (kibibytes < 1 << 20)
-        .{kibibytes / (1 << 10), "MiB"}
-    else if (kibibytes < 1 << 30)
-        .{kibibytes / (1 << 20), "GiB"}
-    else
-        .{kibibytes / (1 << 30), "TiB"};
+    const mem, const unit = mem: {
+        if (kibibytes < 1 << 10) {
+            @branchHint(.cold);
+            break :mem .{kibibytes, "KiB"};
+        } else if (kibibytes < 1 << 20) {
+            @branchHint(.unlikely);
+            break :mem .{kibibytes / (1 << 10), "MiB"};
+        } else if (kibibytes < 1 << 30) {
+            @branchHint(.likely);
+            break :mem .{kibibytes / (1 << 20), "GiB"};
+        } else {
+            @branchHint(.unlikely);
+            break :mem .{kibibytes / (1 << 30), "TiB"};
+        }
+    };
 
     if (mem < 10) {
         try writer.print("{d:.2} {s}", .{mem, unit});
