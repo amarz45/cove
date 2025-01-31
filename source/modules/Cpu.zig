@@ -66,6 +66,8 @@ test "cpu" {
     try cpu.update(1);
     try expect(cpu.system_up >= 0);
     try expect(cpu.cpu_idle >= 0);
+    try expect(cpu.percent >= 0);
+    try expect(cpu.percent <= 100);
 }
 
 // -------------------------------------------------------------------------- //
