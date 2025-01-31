@@ -267,7 +267,6 @@ pub fn updateCpu(
                 try fmt.time(output_ptr.uptime.writer(), cpu.system_up);
             }
             try result_ptr.appendSlice(output_ptr.uptime.slice());
-            //std.debug.print("{d}\n", .{cpu.system_up});
         },
         .used_percent => {
             if (update_needed) {
