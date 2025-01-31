@@ -21,14 +21,17 @@ pub fn isUpdateNeeded(
     const timestamp_new = std.time.nanoTimestamp();
     if (@field(timestamps_ptr, field)) |timestamp_old| {
         if (timestamp_new - timestamp_old >= interval) {
+            //= Update interval reached or passed
             @branchHint(.unlikely);
             @field(timestamps_ptr, field) = timestamp_new;
             return true;
         } else {
+            //= Update interval not reached yet
             @branchHint(.likely);
             return false;
         }
     } else {
+        //= This code will only ever be reached on the first iteration.
         @branchHint(.cold);
         @field(timestamps_ptr, field) = timestamp_new;
         return true;

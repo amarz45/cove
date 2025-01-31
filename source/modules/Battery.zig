@@ -21,7 +21,8 @@ pub const time_len = "999 h 59 m 59 s".len;
 pub fn init() !Battery {
     @setFloatMode(.optimized);
 
-    var dir = try std.fs.cwd().openDir("/sys/class/power_supply/BAT0", .{});
+    const cwd = std.fs.cwd();
+    var dir = try cwd.openDir("/sys/class/power_supply/BAT0", .{});
     defer dir.close();
 
     var energy_now_buf: [16]u8 = undefined;

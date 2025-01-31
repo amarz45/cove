@@ -9,8 +9,8 @@ const Self = @This();
 pub fn init(dir_name: []const u8) !Self {
     @setFloatMode(.optimized);
 
-    var base_dir = try std.fs.cwd()
-        .openDir(base_dir_name, .{ .iterate = true });
+    const cwd = std.fs.cwd();
+    var base_dir = try cwd.openDir(base_dir_name, .{ .iterate = true });
     defer base_dir.close();
 
     var dir = try base_dir.openDir(dir_name, .{});
@@ -19,13 +19,15 @@ pub fn init(dir_name: []const u8) !Self {
     var brightness_buf: [16]u8 = undefined;
     var max_brightness_buf: [16]u8 = undefined;
 
-    const brightness_slice = try io
-        .readLineFile(&brightness_buf, dir, "brightness");
-    const max_brightness_slice = try io
-        .readLineFile(&max_brightness_buf, dir, "max_brightness");
+    const brightness_str = try io.readLineFile(
+        &brightness_buf, dir, "brightness"
+    );
+    const max_brightness_str = try io.readLineFile(
+        &max_brightness_buf, dir, "max_brightness"
+    );
 
-    const brightness = try std.fmt.parseFloat(f32, brightness_slice);
-    const max_brightness = try std.fmt.parseFloat(f32, max_brightness_slice);
+    const brightness = try std.fmt.parseFloat(f32, brightness_str);
+    const max_brightness = try std.fmt.parseFloat(f32, max_brightness_str);
 
     const percent: f32 = if (max_brightness == 0)
         0

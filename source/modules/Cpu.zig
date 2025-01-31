@@ -18,12 +18,11 @@ pub fn updateUptime(cpu_ptr: *Cpu) !void {
     const sep_index = std.mem.indexOfScalar(u8, &buf, ' ') orelse
         @panic("/proc/uptime: space not found.");
 
-    // system uptime in seconds
-    const system_up = try std.fmt
-        .parseFloat(f32, buf[0..sep_index]);
-    // total core idletime in seconds
-    const cpu_idle = try std.fmt
-        .parseFloat(f32, buf[(sep_index + 1)..end_index]);
+    const system_up_str = buf[0..sep_index];
+    const cpu_idle_str = buf[(sep_index + 1)..end_index];
+
+    const system_up = try std.fmt.parseFloat(f32, system_up_str);
+    const cpu_idle = try std.fmt.parseFloat(f32, cpu_idle_str);
 
     cpu_ptr.system_up = system_up;
     cpu_ptr.cpu_idle = cpu_idle;
