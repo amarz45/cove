@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "cove",
-        .root_source_file = b.path("src/cove.zig"),
+        .root_source_file = b.path("source/cove.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -22,7 +22,7 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("zeit", zeit.module("zeit"));
 
     const tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
+        .root_source_file = b.path("source/root.zig"),
         .target = target,
         .optimize = optimize,
     });
