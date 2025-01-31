@@ -80,12 +80,12 @@ pub fn parseConfig(
 
     var modules_used: ModulesUsed = .{};
 
-    {var i: usize = 0; while (i < directives_len) : (i += 1) {
+    for (0..directives_len) |i| {
         try parseModule(
             config_ptr, &output.directives[i], &modules_used,
             module_intervals_ptr
         );
-    }}
+    }
 
     return modules_used;
 }
