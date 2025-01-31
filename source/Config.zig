@@ -63,8 +63,10 @@ pub fn parseConfig(
     config_ptr: *Config,
     module_intervals_ptr: *ModuleIntervals,
 ) !ModulesUsed {
-    const cfg_file = "/home/amaral/.config/cove/cove.scfg";
-    const file = c.fopen(cfg_file, "r");
+    const cfg_file = "/home/loremayer/.config/cove/cove.scfg";
+    const file = c.fopen(cfg_file, "r") orelse @panic(
+        "Configuration file not found at ‘"++cfg_file++"’."
+    );
     defer _ = c.fclose(file);
 
     var cfg = c.scfg_block{};
