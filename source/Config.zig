@@ -323,11 +323,14 @@ fn toNanoseconds(num: u64, unit: []const u8) !u64 {
         num * 1_000_000_000
     else if (std.mem.eql(u8, unit, "ms"))
         num * 1_000_000
-    else if (std.mem.eql(u8, unit, "us"))
-        num * 1000
-    else if (std.mem.eql(u8, unit, "ns"))
-        num
-    else {
+    else if (std.mem.eql(u8, unit, "us")) blk: {
+        @branchHint(.unlikely);
+        break :blk num * 1000;
+    } else if (std.mem.eql(u8, unit, "ns")) blk: {
+        @branchHint(.cold);
+        break :blk num;
+    } else {
+        @branchHint(.cold);
         try stderr.print("Error: invalid unit ‘{s}’\n", .{unit});
         std.process.exit(1);
     };
