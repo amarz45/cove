@@ -5,45 +5,34 @@
 const std = @import("std");
 const Timestamps = @This();
 
-backlight: i128,
-battery:   i128,
-cpu:       i128,
-memory:    i128,
-time:      i128,
+backlight: ?i128 = null,
+battery:   ?i128 = null,
+cpu:       ?i128 = null,
+memory:    ?i128 = null,
+time:      ?i128 = null,
 
-/// This structure is used to check if the timestamps are defined. If they’re
-/// not, that means that we’re on the first update interval so we must
-/// initialize the timestamp.
-pub const Defined = packed struct {
-    backlight: bool = false,
-    battery:   bool = false,
-    cpu:       bool = false,
-    memory:    bool = false,
-    time:      bool = false,
-};
-
-/// An update is needed if the given timestamp is undefined or we have reached
-/// or passed the update interval.
+/// An update is needed if the given timestamp is null or we have reached or
+/// passed the update interval.
 pub fn isUpdateNeeded(
     timestamps_ptr: *Timestamps,
-    defined_ptr: *Defined,
     interval: u64,
     comptime field: []const u8,
 ) bool {
-    const timestamp_old = @field(timestamps_ptr, field);
     const timestamp_new = std.time.nanoTimestamp();
-
-    if (@field(defined_ptr, field)) {
+    if (@field(timestamps_ptr, field)) |timestamp_old| {
         if (timestamp_new - timestamp_old >= interval) {
+            @branchHint(.unlikely);
             @field(timestamps_ptr, field) = timestamp_new;
             return true;
+        } else {
+            @branchHint(.likely);
+            return false;
         }
-        return false;
+    } else {
+        @branchHint(.cold);
+        @field(timestamps_ptr, field) = timestamp_new;
+        return true;
     }
-
-    @field(defined_ptr, field) = true;
-    @field(timestamps_ptr, field) = timestamp_new;
-    return true;
 }
 
 // -------------------------------------------------------------------------- //

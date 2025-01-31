@@ -76,8 +76,7 @@ pub fn main() !void {
     var result: std.ArrayList(u8) = .init(allocator);
     defer if (builtin.mode == .Debug) result.deinit();
 
-    var timestamps: Timestamps = undefined;
-    var timestamps_defined: Timestamps.Defined = .{};
+    var timestamps: Timestamps = .{};
 
     while (true) {
         defer {
@@ -90,7 +89,7 @@ pub fn main() !void {
             if (i != 0) try result.append(' ');
             try output.handleModule(
                 &result, module, &module_intervals, &timestamps,
-                &timestamps_defined, &cpu_data, threads, backlight_dir_name,
+                &cpu_data, threads, backlight_dir_name,
                 local
             );
         }

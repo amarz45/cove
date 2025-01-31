@@ -39,7 +39,6 @@ pub fn handleModule(
     module: Config.Module,
     module_intervals_ptr: *Config.ModuleIntervals,
     timestamps_ptr: *Timestamps,
-    timestamps_defined_ptr: *Timestamps.Defined,
     cpu_data_ptr: *modules.Cpu,
     threads: f32,
     backlight_dir_name: []const u8,
@@ -54,26 +53,24 @@ pub fn handleModule(
         },
         .backlight => {
             try output_ptr.updateBacklight(
-                result_ptr, timestamps_ptr, timestamps_defined_ptr,
-                module_intervals_ptr.backlight, backlight_dir_name
+                result_ptr, timestamps_ptr, module_intervals_ptr.backlight,
+                backlight_dir_name
             );
         },
         .battery => {
             try output_ptr.updateBattery(
-                result_ptr, timestamps_ptr, timestamps_defined_ptr,
-                module_intervals_ptr.battery
+                result_ptr, timestamps_ptr, module_intervals_ptr.battery
             );
         },
         .cpu => {
             try output_ptr.updateCpu(
-                result_ptr, timestamps_ptr, timestamps_defined_ptr,
-                module_intervals_ptr.cpu, cpu_data_ptr, threads
+                result_ptr, timestamps_ptr, module_intervals_ptr.cpu,
+                cpu_data_ptr, threads
             );
         },
         .memory => {
             try output_ptr.updateMemory(
-                result_ptr, timestamps_ptr, timestamps_defined_ptr,
-                module_intervals_ptr.memory
+                result_ptr, timestamps_ptr, module_intervals_ptr.memory
             );
         },
         .time => {
@@ -98,7 +95,6 @@ pub fn updateBacklight(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
-    timestamps_defined_ptr: *Timestamps.Defined,
     interval: u64,
     dir_name: []const u8,
 ) !void {
@@ -118,7 +114,7 @@ pub fn updateBacklight(
     try result_ptr.appendSlice(prefix);
 
     const update_needed = timestamps_ptr.isUpdateNeeded(
-        timestamps_defined_ptr, interval, "backlight"
+        interval, "backlight"
     );
 
     const config = output_ptr.config;
@@ -144,7 +140,6 @@ pub fn updateBattery(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
-    timestamps_defined_ptr: *Timestamps.Defined,
     interval: u64,
 ) !void {
     const battery: modules.Battery = try .init();
@@ -165,7 +160,7 @@ pub fn updateBattery(
     try result_ptr.appendSlice(prefix);
 
     const update_needed = timestamps_ptr.isUpdateNeeded(
-        timestamps_defined_ptr, interval, "battery"
+        interval, "battery"
     );
 
     const config = output_ptr.config;
@@ -213,14 +208,13 @@ pub fn updateMemory(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
-    timestamps_defined_ptr: *Timestamps.Defined,
     interval: u64,
 ) !void {
     const memory: modules.Memory = try .init();
     try result_ptr.appendSlice("󰍛 ");
 
     const update_needed = timestamps_ptr.isUpdateNeeded(
-        timestamps_defined_ptr, interval, "memory"
+        interval, "memory"
     );
 
     const config = output_ptr.config;
@@ -253,7 +247,6 @@ pub fn updateCpu(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
-    timestamps_defined_ptr: *Timestamps.Defined,
     interval: u64,
     cpu: *modules.Cpu,
     threads: f32,
@@ -261,7 +254,7 @@ pub fn updateCpu(
     try result_ptr.appendSlice("󰘚 ");
 
     const update_needed = timestamps_ptr.isUpdateNeeded(
-        timestamps_defined_ptr, interval, "cpu"
+        interval, "cpu"
     );
 
     if (update_needed) try cpu.update(threads);
