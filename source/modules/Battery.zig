@@ -50,7 +50,7 @@ pub fn init() !Battery {
     const energy_now = try std.fmt.parseFloat(f32, energy_now_slice);
     const energy_full = try std.fmt.parseFloat(f32, energy_full_slice);
     const power_now = try std.fmt.parseFloat(f32, power_now_slice);
-    const stop_threshold = try std.fmt.parseInt(u8, stop_threshold_slice, 10);
+    const stop_threshold = try std.fmt.parseUnsigned(u8, stop_threshold_slice, 10);
 
     const capacity: u8 = if (energy_full == 0)
         0
