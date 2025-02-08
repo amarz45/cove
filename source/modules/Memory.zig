@@ -15,7 +15,7 @@ pub fn init() !Memory {
     };
 }
 
-pub fn getUsed(memory: *const Memory) f32 {
+pub fn get_used(memory: *const Memory) f32 {
     @setFloatMode(.optimized);
     return memory.total - memory.free - memory.buffers - memory.cached;
 }

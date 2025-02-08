@@ -8,36 +8,36 @@ const Timestamps = @import("Timestamps.zig");
 const Output = @This();
 
 config:                 Config,
-backlight_percent:      ArrayPercent       = undefined,
-battery_capacity:       ArrayPercent       = undefined,
-cpu_usage:              ArrayPercent       = undefined,
+backlight_percent:      Array_percent        = undefined,
+battery_capacity:       Array_percent        = undefined,
+cpu_usage:              Array_percent        = undefined,
 
-memory_total:           ArrayMemory        = undefined,
-memory_free:            ArrayMemory        = undefined,
-memory_buffers:         ArrayMemory        = undefined,
-memory_cached:          ArrayMemory        = undefined,
-memory_used:            ArrayMemory        = undefined,
+memory_total:           Array_memory         = undefined,
+memory_free:            Array_memory         = undefined,
+memory_buffers:         Array_memory         = undefined,
+memory_cached:          Array_memory         = undefined,
+memory_used:            Array_memory         = undefined,
 
-battery_time_remaining: ArrayBatteryTime   = undefined,
-battery_status:         ArrayBatteryStatus = undefined,
+battery_time_remaining: Array_battery_time   = undefined,
+battery_status:         Array_battery_status = undefined,
 
-uptime:                 ArrayUptime        = undefined,
-time:                   ArrayTime          = undefined,
+uptime:                 Array_uptime         = undefined,
+time:                   Array_time           = undefined,
 
-text_index:             u64                = 0,
+text_index:             u64                  = 0,
 
-const ArrayPercent = std.BoundedArray(u8, fmt.percent_len);
-const ArrayMemory = std.BoundedArray(u8, fmt.memory_len);
-const ArrayBatteryTime = std.BoundedArray(u8, modules.Battery.time_len);
-const ArrayBatteryStatus = std.BoundedArray(u8, "Not charging".len);
-const ArrayUptime = std.BoundedArray(u8, fmt.time_len);
-const ArrayTime = std.BoundedArray(u8, 128);
+const Array_percent = std.BoundedArray(u8, fmt.percent_len);
+const Array_memory = std.BoundedArray(u8, fmt.memory_len);
+const Array_battery_time = std.BoundedArray(u8, modules.Battery.time_len);
+const Array_battery_status = std.BoundedArray(u8, "Not charging".len);
+const Array_uptime = std.BoundedArray(u8, fmt.time_len);
+const Array_time = std.BoundedArray(u8, 128);
 
-pub fn handleModule(
+pub fn handle_module(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     module: Config.Module,
-    module_intervals_ptr: *Config.ModuleIntervals,
+    module_intervals_ptr: *Config.Module_intervals,
     timestamps_ptr: *Timestamps,
     cpu_data_ptr: *modules.Cpu,
     threads: f32,
@@ -49,37 +49,37 @@ pub fn handleModule(
             try result_ptr.appendSlice(markup.separator);
         },
         .text => {
-            try output_ptr.updateText(result_ptr);
+            try output_ptr.update_text(result_ptr);
         },
         .backlight => {
-            try output_ptr.updateBacklight(
+            try output_ptr.update_backlight(
                 result_ptr, timestamps_ptr, module_intervals_ptr.backlight,
                 backlight_dir_name
             );
         },
         .battery => {
-            try output_ptr.updateBattery(
+            try output_ptr.update_battery(
                 result_ptr, timestamps_ptr, module_intervals_ptr.battery
             );
         },
         .cpu => {
-            try output_ptr.updateCpu(
+            try output_ptr.update_cpu(
                 result_ptr, timestamps_ptr, module_intervals_ptr.cpu,
                 cpu_data_ptr, threads
             );
         },
         .memory => {
-            try output_ptr.updateMemory(
+            try output_ptr.update_memory(
                 result_ptr, timestamps_ptr, module_intervals_ptr.memory
             );
         },
         .time => {
-            try output_ptr.updateTime(result_ptr, local);
+            try output_ptr.update_time(result_ptr, local);
         },
     }
 }
 
-pub fn updateText(output_ptr: *Output, result_ptr: *std.ArrayList(u8)) !void {
+pub fn update_text(output_ptr: *Output, result_ptr: *std.ArrayList(u8)) !void {
     const config = output_ptr.config;
     for (config.text_list.items) |arg| switch (arg) {
         .text => {
@@ -91,7 +91,7 @@ pub fn updateText(output_ptr: *Output, result_ptr: *std.ArrayList(u8)) !void {
     };
 }
 
-pub fn updateBacklight(
+pub fn update_backlight(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
@@ -113,7 +113,7 @@ pub fn updateBacklight(
 
     try result_ptr.appendSlice(prefix);
 
-    const update_needed = timestamps_ptr.isUpdateNeeded(
+    const update_needed = timestamps_ptr.is_update_needed(
         interval, "backlight"
     );
 
@@ -136,7 +136,7 @@ pub fn updateBacklight(
     };
 }
 
-pub fn updateBattery(
+pub fn update_battery(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
@@ -159,7 +159,7 @@ pub fn updateBattery(
 
     try result_ptr.appendSlice(prefix);
 
-    const update_needed = timestamps_ptr.isUpdateNeeded(
+    const update_needed = timestamps_ptr.is_update_needed(
         interval, "battery"
     );
 
@@ -191,7 +191,7 @@ pub fn updateBattery(
             if (update_needed) {
                 output_ptr.battery_time_remaining.clear();
                 const writer = output_ptr.battery_time_remaining.writer();
-                try battery.getTimeRemaining(writer);
+                try battery.get_time_remaining(writer);
             }
             try result_ptr.appendSlice(output_ptr.battery_time_remaining.slice());
         },
@@ -204,7 +204,7 @@ pub fn updateBattery(
     };
 }
 
-pub fn updateMemory(
+pub fn update_memory(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
@@ -213,7 +213,7 @@ pub fn updateMemory(
     const memory: modules.Memory = try .init();
     try result_ptr.appendSlice("󰍛 ");
 
-    const update_needed = timestamps_ptr.isUpdateNeeded(
+    const update_needed = timestamps_ptr.is_update_needed(
         interval, "memory"
     );
 
@@ -222,7 +222,7 @@ pub fn updateMemory(
         .used => {
             if (update_needed) {
                 output_ptr.memory_used.clear();
-                const used = memory.getUsed();
+                const used = memory.get_used();
                 try fmt.memory(output_ptr.memory_used.writer(), used);
             }
             try result_ptr.appendSlice(output_ptr.memory_used.slice());
@@ -243,7 +243,7 @@ pub fn updateMemory(
     };
 }
 
-pub fn updateCpu(
+pub fn update_cpu(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
@@ -253,7 +253,7 @@ pub fn updateCpu(
 ) !void {
     try result_ptr.appendSlice("󰘚 ");
 
-    const update_needed = timestamps_ptr.isUpdateNeeded(
+    const update_needed = timestamps_ptr.is_update_needed(
         interval, "cpu"
     );
 
@@ -284,7 +284,7 @@ pub fn updateCpu(
     };
 }
 
-pub fn updateTime(
+pub fn update_time(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     local: zeit.TimeZone,

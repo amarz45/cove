@@ -19,10 +19,10 @@ pub fn init(dir_name: []const u8) !Self {
     var brightness_buf: [16]u8 = undefined;
     var max_brightness_buf: [16]u8 = undefined;
 
-    const brightness_str = try io.readLineFile(
+    const brightness_str = try io.read_line_file(
         &brightness_buf, dir, "brightness"
     );
-    const max_brightness_str = try io.readLineFile(
+    const max_brightness_str = try io.read_line_file(
         &max_brightness_buf, dir, "max_brightness"
     );
 

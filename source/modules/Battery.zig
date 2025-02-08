@@ -31,20 +31,20 @@ pub fn init() !Battery {
     var stop_threshold_buf: ["100".len]u8 = undefined;
     var status_buf: [1]u8 = undefined;
 
-    const energy_now_slice = try io.readLineFile(
+    const energy_now_slice = try io.read_line_file(
         &energy_now_buf, dir, "energy_now"
     );
-    const energy_full_slice = try io.readLineFile(
+    const energy_full_slice = try io.read_line_file(
         &energy_full_buf, dir, "energy_full"
     );
-    const power_now_slice = try io.readLineFile(
+    const power_now_slice = try io.read_line_file(
         &power_now_buf, dir, "power_now"
     );
-    const stop_threshold_slice = try io.readLineFile(
+    const stop_threshold_slice = try io.read_line_file(
         &stop_threshold_buf, dir, "charge_stop_threshold"
     );
     const status: Status = @enumFromInt(
-        try io.readFirstChar(&status_buf, dir, "status")
+        try io.read_first_char(&status_buf, dir, "status")
     );
 
     const energy_now = try std.fmt.parseFloat(f32, energy_now_slice);
@@ -70,7 +70,7 @@ pub fn init() !Battery {
 // The formulas for calculating the battery remaining time are as follows:
 //     - time to empty (discharging) = energy_now / power_now
 //     - time to full (charging) = (energy_full - energy_now) / power_now
-pub fn getTimeRemaining(battery_ptr: *const Battery, writer: anytype) !void {
+pub fn get_time_remaining(battery_ptr: *const Battery, writer: anytype) !void {
     @setFloatMode(.optimized);
 
     const capacity = battery_ptr.capacity;

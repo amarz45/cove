@@ -7,7 +7,7 @@ percent:   f32,
 
 const expect = std.testing.expect;
 
-pub fn updateUptime(cpu_ptr: *Cpu) !void {
+pub fn update_uptime(cpu_ptr: *Cpu) !void {
     var buf: [32]u8 = undefined;
 
     var file = try std.fs.cwd().openFile("/proc/uptime", .{});
@@ -36,7 +36,7 @@ pub fn update(cpu_ptr: *Cpu, threads: f32) !void {
     const idletime_1 = cpu_ptr.cpu_idle;
     
     // Get the new uptime and idletime values.
-    try cpu_ptr.updateUptime();
+    try cpu_ptr.update_uptime();
     const uptime_2 = cpu_ptr.system_up;
     const idletime_2 = cpu_ptr.cpu_idle;
 
@@ -58,7 +58,7 @@ pub fn update(cpu_ptr: *Cpu, threads: f32) !void {
 test "cpu" {
     var cpu: Cpu = undefined;
 
-    try cpu.updateUptime();
+    try cpu.update_uptime();
     try expect(cpu.system_up >= 0);
     try expect(cpu.cpu_idle >= 0);
 

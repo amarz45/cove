@@ -8,19 +8,19 @@ const stderr = std.io.getStdErr().writer();
 const expectEqual = std.testing.expectEqual;
 const expectEqualStrings = std.testing.expectEqualStrings;
 
-module_list:    ModuleList,
-text_list:      VariableList,
-backlight_list: VariableList,
-battery_list:   VariableList,
-cpu_list:       VariableList,
-drive_list:     VariableList,
-memory_list:    VariableList,
-time_list:      VariableList,
-str_list:       StrList,
+module_list:    Module_list,
+text_list:      Variable_list,
+backlight_list: Variable_list,
+battery_list:   Variable_list,
+cpu_list:       Variable_list,
+drive_list:     Variable_list,
+memory_list:    Variable_list,
+time_list:      Variable_list,
+str_list:       Str_list,
 
-const ModuleList = std.ArrayList(Module);
-const VariableList = std.ArrayList(Variable);
-const StrList = std.ArrayList(std.BoundedArray(u8, 32));
+const Module_list = std.ArrayList(Module);
+const Variable_list = std.ArrayList(Variable);
+const Str_list = std.ArrayList(std.BoundedArray(u8, 32));
 
 pub const Module = enum(u8) {
     separator,
@@ -45,7 +45,7 @@ pub const Variable = enum(u8) {
     used_percent,
 };
 
-pub const ModuleIntervals = struct {
+pub const Module_intervals = struct {
     backlight: u64,
     battery:   u64,
     cpu:       u64,
@@ -53,16 +53,16 @@ pub const ModuleIntervals = struct {
     time:      u64,
 };
 
-pub const ModulesUsed = packed struct {
+pub const Modules_used = packed struct {
     backlight: bool = false,
     cpu:       bool = false,
     time:      bool = false,
 };
 
-pub fn parseConfig(
+pub fn parse_config(
     config_ptr: *Config,
-    module_intervals_ptr: *ModuleIntervals,
-) !ModulesUsed {
+    module_intervals_ptr: *Module_intervals,
+) !Modules_used {
     const cfg_file = "/home/loremayer/.config/cove/cove.scfg";
     const file = c.fopen(cfg_file, "r") orelse @panic(
         "Configuration file not found at ‘"++cfg_file++"’."
@@ -78,10 +78,10 @@ pub fn parseConfig(
     const directives_len = output.directives_len;
     try config_ptr.module_list.ensureTotalCapacityPrecise(directives_len);
 
-    var modules_used: ModulesUsed = .{};
+    var modules_used: Modules_used = .{};
 
     for (0..directives_len) |i| {
-        try parseModule(
+        try parse_module(
             config_ptr, &output.directives[i], &modules_used,
             module_intervals_ptr
         );
@@ -90,11 +90,11 @@ pub fn parseConfig(
     return modules_used;
 }
 
-fn parseModule(
+fn parse_module(
     config_ptr: *Config,
     module_cfg: *allowzero c.scfg_directive,
-    modules_used_ptr: *ModulesUsed,
-    module_intervals_ptr: *ModuleIntervals,
+    modules_used_ptr: *Modules_used,
+    module_intervals_ptr: *Module_intervals,
 ) !void {
     const name = std.mem.span(module_cfg.name);
     const params_len = module_cfg.params_len;
@@ -143,31 +143,31 @@ fn parseModule(
         const num = try std.fmt.parseUnsigned(u64, num_str, 10);
         const unit = std.mem.span(module_cfg.params[2]);
 
-        interval = try toNanoseconds(num, unit);
+        interval = try to_nanoseconds(num, unit);
         break :param std.mem.span(module_cfg.params[3]);
     };
 
     if (std.mem.eql(u8, name, "backlight")) {
-        try parseParamGeneric(
+        try parse_param_generic(
             config_ptr, module_intervals_ptr, interval, param, "backlight"
         );
         modules_used_ptr.backlight = true;
     } else if (std.mem.eql(u8, name, "cpu")) {
-        try parseParamGeneric(
+        try parse_param_generic(
             config_ptr, module_intervals_ptr, interval, param, "cpu"
         );
         modules_used_ptr.cpu = true;
     } else if (std.mem.eql(u8, name, "time")) {
-        try parseParamGeneric(
+        try parse_param_generic(
             config_ptr, module_intervals_ptr, interval, param, "time"
         );
         modules_used_ptr.time = true;
     } else if (std.mem.eql(u8, name, "battery")) {
-        try parseParamGeneric(
+        try parse_param_generic(
             config_ptr, module_intervals_ptr, interval, param, "battery"
         );
     } else if (std.mem.eql(u8, name, "memory")) {
-        try parseParamGeneric(
+        try parse_param_generic(
             config_ptr, module_intervals_ptr, interval, param, "memory"
         );
     } else {
@@ -176,16 +176,16 @@ fn parseModule(
     }
 }
 
-fn parseParamGeneric(
+fn parse_param_generic(
     config_ptr: *Config,
-    module_intervals_ptr: *ModuleIntervals,
+    module_intervals_ptr: *Module_intervals,
     interval: u64,
     param: []const u8,
     comptime field: []const u8,
 ) !void {
     @field(module_intervals_ptr, field) = interval;
     config_ptr.module_list.appendAssumeCapacity(@field(Module, field));
-    try parseParam(
+    try parse_param(
         &@field(config_ptr, field++"_list"), &config_ptr.str_list, param
     );
 }
@@ -194,9 +194,9 @@ fn parseParamGeneric(
 /// tables. An example of a parameter would be `{used} / {total}` for memory. It
 /// Should be split into the tokens `used`, `text`, `total`; and the `str_list`
 /// array should have the string ` / ` appended to it.
-fn parseParam(
-    variable_list: *VariableList,
-    str_list: *StrList,
+fn parse_param(
+    variable_list: *Variable_list,
+    str_list: *Str_list,
     _param: []const u8,
 ) !void {
     var param = _param;
@@ -208,7 +208,7 @@ fn parseParam(
 
         while (std.mem.indexOfScalar(u8, param, '}')) |close_i| {
             const arg = param[(open_i + 1)..close_i];
-            try variable_list.append(try varFromStr(arg));
+            try variable_list.append(try var_from_str(arg));
 
             param = param[(close_i + 1)..];
             if (std.mem.indexOfScalar(u8, param, '{')) |next_open_i| {
@@ -236,17 +236,17 @@ fn parseParam(
     }
 }
 
-test parseParam {
+test parse_param {
     const allocator = std.testing.allocator;
 
-    var variable_list: VariableList = .init(allocator);
-    var str_list: StrList = .init(allocator);
+    var variable_list: Variable_list = .init(allocator);
+    var str_list: Str_list = .init(allocator);
     defer {
         variable_list.deinit();
         str_list.deinit();
     }
 
-    try parseParam(&variable_list, &str_list, "{used} / {total}");
+    try parse_param(&variable_list, &str_list, "{used} / {total}");
     try expectEqual(variable_list.items.len, 3);
     try expectEqual(variable_list.items[0], .used);
     try expectEqual(variable_list.items[1], .text);
@@ -257,7 +257,7 @@ test parseParam {
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
-    try parseParam(&variable_list, &str_list, "{used}{total}");
+    try parse_param(&variable_list, &str_list, "{used}{total}");
     try expectEqual(variable_list.items.len, 2);
     try expectEqual(variable_list.items[0], .used);
     try expectEqual(variable_list.items[1], .total);
@@ -266,7 +266,7 @@ test parseParam {
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
-    try parseParam(&variable_list, &str_list, "Battery: {remaining%}");
+    try parse_param(&variable_list, &str_list, "Battery: {remaining%}");
     try expectEqual(variable_list.items.len, 2);
     try expectEqual(variable_list.items[0], .text);
     try expectEqual(variable_list.items[1], .remaining_percent);
@@ -276,7 +276,7 @@ test parseParam {
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
-    try parseParam(&variable_list, &str_list, "{remaining%} battery");
+    try parse_param(&variable_list, &str_list, "{remaining%} battery");
     try expectEqual(variable_list.items.len, 2);
     try expectEqual(variable_list.items[0], .remaining_percent);
     try expectEqual(variable_list.items[1], .text);
@@ -286,14 +286,14 @@ test parseParam {
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
-    try parseParam(&variable_list, &str_list, "lorem ipsum");
+    try parse_param(&variable_list, &str_list, "lorem ipsum");
     try expectEqual(variable_list.items.len, 1);
     try expectEqual(variable_list.items[0], .text);
     try expectEqual(str_list.items.len, 1);
     try expectEqualStrings(str_list.items[0].slice(), "lorem ipsum");
 }
 
-fn varFromStr(str: []const u8) !Variable {
+fn var_from_str(str: []const u8) !Variable {
     return if (std.mem.eql(u8, str, "brightness%"))
         .percent
     else if (std.mem.eql(u8, str, "remaining"))
@@ -318,7 +318,7 @@ fn varFromStr(str: []const u8) !Variable {
     };
 }
 
-fn toNanoseconds(num: u64, unit: []const u8) !u64 {
+fn to_nanoseconds(num: u64, unit: []const u8) !u64 {
     return if (std.mem.eql(u8, unit, "s"))
         num * 1_000_000_000
     else if (std.mem.eql(u8, unit, "ms"))
@@ -336,21 +336,21 @@ fn toNanoseconds(num: u64, unit: []const u8) !u64 {
     };
 }
 
-test toNanoseconds {
-    try expectEqual(toNanoseconds(1, "s"), 1_000_000_000);
-    try expectEqual(toNanoseconds(1, "ms"), 1_000_000);
-    try expectEqual(toNanoseconds(1, "us"), 1000);
-    try expectEqual(toNanoseconds(1, "ns"), 1);
+test to_nanoseconds {
+    try expectEqual(to_nanoseconds(1, "s"), 1_000_000_000);
+    try expectEqual(to_nanoseconds(1, "ms"), 1_000_000);
+    try expectEqual(to_nanoseconds(1, "us"), 1000);
+    try expectEqual(to_nanoseconds(1, "ns"), 1);
 
-    try expectEqual(toNanoseconds(0, "s"), 0);
-    try expectEqual(toNanoseconds(0, "ms"), 0);
-    try expectEqual(toNanoseconds(0, "us"), 0);
-    try expectEqual(toNanoseconds(0, "ns"), 0);
+    try expectEqual(to_nanoseconds(0, "s"), 0);
+    try expectEqual(to_nanoseconds(0, "ms"), 0);
+    try expectEqual(to_nanoseconds(0, "us"), 0);
+    try expectEqual(to_nanoseconds(0, "ns"), 0);
 
-    try expectEqual(toNanoseconds(9, "s"), 9_000_000_000);
-    try expectEqual(toNanoseconds(99, "ms"), 99_000_000);
-    try expectEqual(toNanoseconds(999, "us"), 999_000);
-    try expectEqual(toNanoseconds(9999, "ns"), 9999);
+    try expectEqual(to_nanoseconds(9, "s"), 9_000_000_000);
+    try expectEqual(to_nanoseconds(99, "ms"), 99_000_000);
+    try expectEqual(to_nanoseconds(999, "us"), 999_000);
+    try expectEqual(to_nanoseconds(9999, "ns"), 9999);
 }
 
 // -------------------------------------------------------------------------- //

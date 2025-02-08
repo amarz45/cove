@@ -1,7 +1,7 @@
 const std = @import("std");
 const Dir = std.fs.Dir;
 
-pub fn readLineFile(buf: []u8, dir: Dir, filename: []const u8) ![]const u8 {
+pub fn read_line_file(buf: []u8, dir: Dir, filename: []const u8) ![]const u8 {
     var file = try dir.openFile(filename, .{});
     defer file.close();
 
@@ -11,7 +11,7 @@ pub fn readLineFile(buf: []u8, dir: Dir, filename: []const u8) ![]const u8 {
     return buf[0..end_index];
 }
 
-pub fn readFirstChar(buf: []u8, dir: Dir, filename: []const u8) !u8 {
+pub fn read_first_char(buf: []u8, dir: Dir, filename: []const u8) !u8 {
     var file = try dir.openFile(filename, .{});
     defer file.close();
 

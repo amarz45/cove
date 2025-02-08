@@ -13,7 +13,7 @@ time:      ?i128 = null,
 
 /// An update is needed if the given timestamp is null or we have reached or
 /// passed the update interval.
-pub fn isUpdateNeeded(
+pub fn is_update_needed(
     timestamps_ptr: *Timestamps,
     interval: u64,
     comptime field: []const u8,

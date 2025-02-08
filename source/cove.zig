@@ -26,8 +26,8 @@ pub fn main() !void {
         .time_list      = .init(allocator),
         .str_list       = .init(allocator),
     };
-    var module_intervals: Config.ModuleIntervals = undefined;
-    const modules_used = try config.parseConfig(&module_intervals);
+    var module_intervals: Config.Module_intervals = undefined;
+    const modules_used = try config.parse_config(&module_intervals);
 
     // output
     var output: Output = .{ .config = config };
@@ -38,7 +38,7 @@ pub fn main() !void {
         if (!modules_used.cpu) {
             break :threads undefined;
         }
-        try cpu_data.updateUptime();
+        try cpu_data.update_uptime();
         break :threads @floatFromInt(try std.Thread.getCpuCount());
     };
 
@@ -87,7 +87,7 @@ pub fn main() !void {
 
         for (output.config.module_list.items, 0..) |module, i| {
             if (i != 0) try result.append(' ');
-            try output.handleModule(
+            try output.handle_module(
                 &result, module, &module_intervals, &timestamps,
                 &cpu_data, threads, backlight_dir_name,
                 local
