@@ -63,10 +63,34 @@ pub fn parse_config(
     config_ptr: *Config,
     module_intervals_ptr: *Module_intervals,
 ) !Modules_used {
-    const cfg_file = "/home/loremayer/.config/cove/cove.scfg";
-    const file = c.fopen(cfg_file, "r") orelse @panic(
-        "Configuration file not found at ‘"++cfg_file++"’."
+    const xdg_config_home = std.posix.getenv("XDG_CONFIG_HOME");
+    const config_dir = xdg_config_home orelse config_dir: {
+        var buf: [64]u8 = undefined;
+        const home = std.posix.getenv("HOME") orelse {
+            try stderr.writeAll("Home directory not found!\n");
+            std.process.exit(1);
+        };
+        break :config_dir try std.fmt.bufPrint(&buf, "{s}/.config", .{home});
+    };
+
+    var config_file_buf: [64]u8 = undefined;
+    const config_file = try std.fmt.bufPrint(
+        &config_file_buf, "{s}/cove/cove.scfg", .{config_dir}
     );
+
+    var fba_buf: [64]u8 = undefined;
+    var fba: std.heap.FixedBufferAllocator = .init(&fba_buf);
+    const allocator = fba.allocator();
+
+    const config_file_c = try allocator.dupeZ(u8, config_file);
+    defer allocator.free(config_file_c);
+
+    const file = c.fopen(config_file_c, "r") orelse {
+        try stderr.print(
+            "Error: Configuration file not found at ‘{s}’.\n", .{config_file}
+        );
+        std.process.exit(1);
+    };
     defer _ = c.fclose(file);
 
     var cfg = c.scfg_block{};
