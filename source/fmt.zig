@@ -42,7 +42,7 @@ test percent {
 pub fn memory(writer: anytype, kibibytes: f32) !void {
     @setFloatMode(.optimized);
 
-    const mem, const unit = mem: {
+    const mem, const unit: *const [3]u8 = mem: {
         if (kibibytes < 1 << 10) {
             @branchHint(.cold);
             break :mem .{kibibytes, "KiB"};
