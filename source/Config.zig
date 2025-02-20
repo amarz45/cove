@@ -1,12 +1,13 @@
 const std = @import("std");
+const testing = @import("testing.zig");
 const c = @cImport({
     @cInclude("scfg.h");
 });
 const Config = @This();
 
 const stderr = std.io.getStdErr().writer();
-const expectEqual = std.testing.expectEqual;
-const expectEqualStrings = std.testing.expectEqualStrings;
+const expect_eql = testing.expect_eql; 
+const expect_eql_str = testing.expect_eql_str;
 
 module_list:    Module_list,
 text_list:      Variable_list,
@@ -271,50 +272,50 @@ test parse_param {
     }
 
     try parse_param(&variable_list, &str_list, "{used} / {total}");
-    try expectEqual(variable_list.items.len, 3);
-    try expectEqual(variable_list.items[0], .used);
-    try expectEqual(variable_list.items[1], .text);
-    try expectEqual(variable_list.items[2], .total);
-    try expectEqual(str_list.items.len, 1);
-    try expectEqualStrings(str_list.items[0].slice(), " / ");
+    try expect_eql(variable_list.items.len, 3);
+    try expect_eql(variable_list.items[0], .used);
+    try expect_eql(variable_list.items[1], .text);
+    try expect_eql(variable_list.items[2], .total);
+    try expect_eql(str_list.items.len, 1);
+    try expect_eql_str(str_list.items[0].slice(), " / ");
 
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
     try parse_param(&variable_list, &str_list, "{used}{total}");
-    try expectEqual(variable_list.items.len, 2);
-    try expectEqual(variable_list.items[0], .used);
-    try expectEqual(variable_list.items[1], .total);
-    try expectEqual(str_list.items.len, 0);
+    try expect_eql(variable_list.items.len, 2);
+    try expect_eql(variable_list.items[0], .used);
+    try expect_eql(variable_list.items[1], .total);
+    try expect_eql(str_list.items.len, 0);
 
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
     try parse_param(&variable_list, &str_list, "Battery: {remaining%}");
-    try expectEqual(variable_list.items.len, 2);
-    try expectEqual(variable_list.items[0], .text);
-    try expectEqual(variable_list.items[1], .remaining_percent);
-    try expectEqual(str_list.items.len, 1);
-    try expectEqualStrings(str_list.items[0].slice(), "Battery: ");
+    try expect_eql(variable_list.items.len, 2);
+    try expect_eql(variable_list.items[0], .text);
+    try expect_eql(variable_list.items[1], .remaining_percent);
+    try expect_eql(str_list.items.len, 1);
+    try expect_eql_str(str_list.items[0].slice(), "Battery: ");
 
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
     try parse_param(&variable_list, &str_list, "{remaining%} battery");
-    try expectEqual(variable_list.items.len, 2);
-    try expectEqual(variable_list.items[0], .remaining_percent);
-    try expectEqual(variable_list.items[1], .text);
-    try expectEqual(str_list.items.len, 1);
-    try expectEqualStrings(str_list.items[0].slice(), " battery");
+    try expect_eql(variable_list.items.len, 2);
+    try expect_eql(variable_list.items[0], .remaining_percent);
+    try expect_eql(variable_list.items[1], .text);
+    try expect_eql(str_list.items.len, 1);
+    try expect_eql_str(str_list.items[0].slice(), " battery");
 
     variable_list.clearRetainingCapacity();
     str_list.clearRetainingCapacity();
 
     try parse_param(&variable_list, &str_list, "lorem ipsum");
-    try expectEqual(variable_list.items.len, 1);
-    try expectEqual(variable_list.items[0], .text);
-    try expectEqual(str_list.items.len, 1);
-    try expectEqualStrings(str_list.items[0].slice(), "lorem ipsum");
+    try expect_eql(variable_list.items.len, 1);
+    try expect_eql(variable_list.items[0], .text);
+    try expect_eql(str_list.items.len, 1);
+    try expect_eql_str(str_list.items[0].slice(), "lorem ipsum");
 }
 
 fn var_from_str(str: []const u8) !Variable {
@@ -361,20 +362,20 @@ fn to_nanoseconds(num: u64, unit: []const u8) !u64 {
 }
 
 test to_nanoseconds {
-    try expectEqual(to_nanoseconds(1, "s"), 1_000_000_000);
-    try expectEqual(to_nanoseconds(1, "ms"), 1_000_000);
-    try expectEqual(to_nanoseconds(1, "us"), 1000);
-    try expectEqual(to_nanoseconds(1, "ns"), 1);
+    try expect_eql(to_nanoseconds(1, "s"), 1_000_000_000);
+    try expect_eql(to_nanoseconds(1, "ms"), 1_000_000);
+    try expect_eql(to_nanoseconds(1, "us"), 1000);
+    try expect_eql(to_nanoseconds(1, "ns"), 1);
 
-    try expectEqual(to_nanoseconds(0, "s"), 0);
-    try expectEqual(to_nanoseconds(0, "ms"), 0);
-    try expectEqual(to_nanoseconds(0, "us"), 0);
-    try expectEqual(to_nanoseconds(0, "ns"), 0);
+    try expect_eql(to_nanoseconds(0, "s"), 0);
+    try expect_eql(to_nanoseconds(0, "ms"), 0);
+    try expect_eql(to_nanoseconds(0, "us"), 0);
+    try expect_eql(to_nanoseconds(0, "ns"), 0);
 
-    try expectEqual(to_nanoseconds(9, "s"), 9_000_000_000);
-    try expectEqual(to_nanoseconds(99, "ms"), 99_000_000);
-    try expectEqual(to_nanoseconds(999, "us"), 999_000);
-    try expectEqual(to_nanoseconds(9999, "ns"), 9999);
+    try expect_eql(to_nanoseconds(9, "s"), 9_000_000_000);
+    try expect_eql(to_nanoseconds(99, "ms"), 99_000_000);
+    try expect_eql(to_nanoseconds(999, "us"), 999_000);
+    try expect_eql(to_nanoseconds(9999, "ns"), 9999);
 }
 
 // -------------------------------------------------------------------------- //

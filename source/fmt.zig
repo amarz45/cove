@@ -1,6 +1,7 @@
 const std = @import("std");
+const testing = @import("testing.zig");
 
-const expectEqualStrings = std.testing.expectEqualStrings;
+const expect_eql_str = testing.expect_eql_str;
 
 pub const percent_len = "100 %".len;
 pub const memory_len = "1024 KiB".len;
@@ -14,27 +15,27 @@ test percent {
     var array: std.BoundedArray(u8, percent_len) = .{};
 
     try percent(array.writer(), 0);
-    try expectEqualStrings(array.slice(), "0 %");
+    try expect_eql_str(array.slice(), "0 %");
 
     array.clear();
     try percent(array.writer(), 0.0);
-    try expectEqualStrings(array.slice(), "0 %");
+    try expect_eql_str(array.slice(), "0 %");
 
     array.clear();
     try percent(array.writer(), 10);
-    try expectEqualStrings(array.slice(), "10 %");
+    try expect_eql_str(array.slice(), "10 %");
 
     array.clear();
     try percent(array.writer(), 10.0);
-    try expectEqualStrings(array.slice(), "10 %");
+    try expect_eql_str(array.slice(), "10 %");
 
     array.clear();
     try percent(array.writer(), 100);
-    try expectEqualStrings(array.slice(), "100 %");
+    try expect_eql_str(array.slice(), "100 %");
 
     array.clear();
     try percent(array.writer(), 100.0);
-    try expectEqualStrings(array.slice(), "100 %");
+    try expect_eql_str(array.slice(), "100 %");
 }
 
 // Given a buffer and the memory amount in kibibytes, write to the buffer a
@@ -71,43 +72,43 @@ test memory {
     var array: std.BoundedArray(u8, memory_len) = .{};
 
     try memory(array.writer(), 0);
-    try expectEqualStrings(array.slice(), "0.00 KiB");
+    try expect_eql_str(array.slice(), "0.00 KiB");
 
     array.clear();
     try memory(array.writer(), 9);
-    try expectEqualStrings(array.slice(), "9.00 KiB");
+    try expect_eql_str(array.slice(), "9.00 KiB");
 
     array.clear();
     try memory(array.writer(), 10);
-    try expectEqualStrings(array.slice(), "10.0 KiB");
+    try expect_eql_str(array.slice(), "10.0 KiB");
 
     array.clear();
     try memory(array.writer(), 99);
-    try expectEqualStrings(array.slice(), "99.0 KiB");
+    try expect_eql_str(array.slice(), "99.0 KiB");
 
     array.clear();
     try memory(array.writer(), 100);
-    try expectEqualStrings(array.slice(), "100 KiB");
+    try expect_eql_str(array.slice(), "100 KiB");
 
     array.clear(); 
     try memory(array.writer(), 1000);
-    try expectEqualStrings(array.slice(), "1000 KiB");
+    try expect_eql_str(array.slice(), "1000 KiB");
 
     array.clear(); 
     try memory(array.writer(), 1023);
-    try expectEqualStrings(array.slice(), "1023 KiB");
+    try expect_eql_str(array.slice(), "1023 KiB");
 
     array.clear();
     try memory(array.writer(), 1 << 10);
-    try expectEqualStrings(array.slice(), "1.00 MiB");
+    try expect_eql_str(array.slice(), "1.00 MiB");
 
     array.clear();
     try memory(array.writer(), 1 << 20);
-    try expectEqualStrings(array.slice(), "1.00 GiB");
+    try expect_eql_str(array.slice(), "1.00 GiB");
 
     array.clear();
     try memory(array.writer(), 1 << 30);
-    try expectEqualStrings(array.slice(), "1.00 TiB");
+    try expect_eql_str(array.slice(), "1.00 TiB");
 }
 
 pub fn time(writer: anytype, seconds_total: f32) !void {
