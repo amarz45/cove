@@ -40,7 +40,7 @@ fn get_entry(comptime entry: []const u8) !f32 {
         @panic("/proc/meminfo: unit not found for entry ‘"++entry++"’.");
     const slice_num = slice_no_spaces[0..(unit_index - 1)];
 
-    return try std.fmt.parseFloat(f32, slice_num);
+    return std.fmt.parseFloat(f32, slice_num);
 }
 
 const expect = std.testing.expect;
