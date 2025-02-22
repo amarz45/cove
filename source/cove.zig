@@ -28,6 +28,7 @@ pub fn main() !void {
     };
     var module_intervals: Config.Module_intervals = undefined;
     const modules_used = try config.parse_config(&module_intervals);
+    const update_interval = get_update_interval(&module_intervals);
 
     // output
     var output: Output = .{ .config = config };
@@ -81,7 +82,7 @@ pub fn main() !void {
     while (true) {
         defer {
             result.clearRetainingCapacity();
-            std.time.sleep(std.time.ns_per_s); // one second
+            std.time.sleep(update_interval); // one second
             output.text_index = 0;
         }
 
@@ -96,6 +97,18 @@ pub fn main() !void {
 
         try stdout.print("{s}\n", .{result.items});
     }
+}
+
+fn get_update_interval(module_intervals: *const Config.Module_intervals) u64 {
+    const fields = std.meta.fields(Config.Module_intervals);
+    var gcd = @field(module_intervals, fields[0].name);
+
+    inline for (fields[1..]) |f| {
+        const interval = @field(module_intervals, f.name);
+        gcd = std.math.gcd(gcd, interval);
+    }
+
+    return gcd;
 }
 
 // -------------------------------------------------------------------------- //
