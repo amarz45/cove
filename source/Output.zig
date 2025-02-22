@@ -83,8 +83,8 @@ pub fn update_text(output_ptr: *Output, result_ptr: *std.ArrayList(u8)) !void {
     const config = output_ptr.config;
     for (config.text_list.items) |arg| switch (arg) {
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].slice();
-            try result_ptr.appendSlice(slice);
+            const array = config.str_list.items[output_ptr.text_index];
+            try result_ptr.appendSlice(array.constSlice());
             output_ptr.text_index += 1;
         },
         else => {},
@@ -125,11 +125,12 @@ pub fn update_backlight(
                 const writer = output_ptr.backlight_percent.writer();
                 try fmt.percent(writer, backlight.percent);
             }
-            try result_ptr.appendSlice(output_ptr.backlight_percent.slice());
+            const array = output_ptr.backlight_percent;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].slice();
-            try result_ptr.appendSlice(slice);
+            const array = config.str_list.items[output_ptr.text_index];
+            try result_ptr.appendSlice(array.constSlice());
             output_ptr.text_index += 1;
         },
         else => {},
@@ -171,7 +172,8 @@ pub fn update_battery(
                 const writer = output_ptr.battery_capacity.writer();
                 try fmt.percent(writer, battery.capacity);
             }
-            try result_ptr.appendSlice(output_ptr.battery_capacity.slice());
+            const array = output_ptr.battery_capacity;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .status => {
             if (update_needed) {
@@ -185,7 +187,8 @@ pub fn update_battery(
                 const writer = output_ptr.battery_status.writer();
                 _ = try writer.write(status);
             }
-            try result_ptr.appendSlice(output_ptr.battery_status.slice());
+            const array = output_ptr.battery_status;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .time_remaining => {
             if (update_needed) {
@@ -193,10 +196,10 @@ pub fn update_battery(
                 const writer = output_ptr.battery_time_remaining.writer();
                 try battery.get_time_remaining(writer);
             }
-            try result_ptr.appendSlice(output_ptr.battery_time_remaining.slice());
+            try result_ptr.appendSlice(output_ptr.battery_time_remaining.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].slice();
+            const slice = config.str_list.items[output_ptr.text_index].constSlice();
             try result_ptr.appendSlice(slice);
             output_ptr.text_index += 1;
         },
@@ -225,17 +228,17 @@ pub fn update_memory(
                 const used = memory.get_used();
                 try fmt.memory(output_ptr.memory_used.writer(), used);
             }
-            try result_ptr.appendSlice(output_ptr.memory_used.slice());
+            try result_ptr.appendSlice(output_ptr.memory_used.constSlice());
         },
         .total => {
             if (update_needed) {
                 output_ptr.memory_total.clear();
                 try fmt.memory(output_ptr.memory_total.writer(), memory.total);
             }
-            try result_ptr.appendSlice(output_ptr.memory_total.slice());
+            try result_ptr.appendSlice(output_ptr.memory_total.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].slice();
+            const slice = config.str_list.items[output_ptr.text_index].constSlice();
             try result_ptr.appendSlice(slice);
             output_ptr.text_index += 1;
         },
@@ -266,17 +269,17 @@ pub fn update_cpu(
                 output_ptr.uptime.clear();
                 try fmt.time(output_ptr.uptime.writer(), cpu.system_up);
             }
-            try result_ptr.appendSlice(output_ptr.uptime.slice());
+            try result_ptr.appendSlice(output_ptr.uptime.constSlice());
         },
         .used_percent => {
             if (update_needed) {
                 output_ptr.cpu_usage.clear();
                 try fmt.percent(output_ptr.cpu_usage.writer(), cpu.percent);
             }
-            try result_ptr.appendSlice(output_ptr.cpu_usage.slice());
+            try result_ptr.appendSlice(output_ptr.cpu_usage.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].slice();
+            const slice = config.str_list.items[output_ptr.text_index].constSlice();
             try result_ptr.appendSlice(slice);
             output_ptr.text_index += 1;
         },
@@ -291,7 +294,7 @@ pub fn update_time(
 ) !void {
     try result_ptr.appendSlice("󰃰 ");
 
-    const time_fmt = output_ptr.config.str_list.items[output_ptr.text_index].slice();
+    const time_fmt = output_ptr.config.str_list.items[output_ptr.text_index].constSlice();
     output_ptr.text_index += 1;
 
     const now = try zeit.instant(.{});
@@ -301,7 +304,7 @@ pub fn update_time(
     output_ptr.time.clear();
     try dt.strftime(output_ptr.time.writer(), time_fmt);
 
-    try result_ptr.appendSlice(output_ptr.time.slice());
+    try result_ptr.appendSlice(output_ptr.time.constSlice());
 }
 
 // -------------------------------------------------------------------------- //
