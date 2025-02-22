@@ -17,7 +17,8 @@ pub fn is_update_needed(
     timestamps_ptr: *Timestamps,
     interval: u64,
     comptime field: []const u8,
-) bool {
+)
+bool {
     const timestamp_new = std.time.nanoTimestamp();
     if (@field(timestamps_ptr, field)) |timestamp_old| {
         if (timestamp_new - timestamp_old >= interval) {

@@ -62,8 +62,9 @@ pub const Modules_used = packed struct {
 
 pub fn parse_config(
     config_ptr: *Config,
-    module_intervals_ptr: *Module_intervals,
-) !Modules_used {
+    module_intervals_ptr: *Module_intervals
+)
+!Modules_used {
     const xdg_config_home = std.posix.getenv("XDG_CONFIG_HOME");
     const config_dir = xdg_config_home orelse config_dir: {
         var buf: [64]u8 = undefined;
@@ -120,7 +121,8 @@ fn parse_module(
     module_cfg: *allowzero c.scfg_directive,
     modules_used_ptr: *Modules_used,
     module_intervals_ptr: *Module_intervals,
-) !void {
+)
+!void {
     const name = std.mem.span(module_cfg.name);
     const params_len = module_cfg.params_len;
 
@@ -173,44 +175,50 @@ fn parse_module(
     };
 
     if (std.mem.eql(u8, name, "backlight")) {
-        try parse_param_generic(
+        try parse_param(
             config_ptr, module_intervals_ptr, interval, param, "backlight"
         );
         modules_used_ptr.backlight = true;
-    } else if (std.mem.eql(u8, name, "cpu")) {
-        try parse_param_generic(
+    }
+    else if (std.mem.eql(u8, name, "cpu")) {
+        try parse_param(
             config_ptr, module_intervals_ptr, interval, param, "cpu"
         );
         modules_used_ptr.cpu = true;
-    } else if (std.mem.eql(u8, name, "time")) {
-        try parse_param_generic(
+    }
+    else if (std.mem.eql(u8, name, "time")) {
+        try parse_param(
             config_ptr, module_intervals_ptr, interval, param, "time"
         );
         modules_used_ptr.time = true;
-    } else if (std.mem.eql(u8, name, "battery")) {
-        try parse_param_generic(
+    }
+    else if (std.mem.eql(u8, name, "battery")) {
+        try parse_param(
             config_ptr, module_intervals_ptr, interval, param, "battery"
         );
-    } else if (std.mem.eql(u8, name, "memory")) {
-        try parse_param_generic(
+    }
+    else if (std.mem.eql(u8, name, "memory")) {
+        try parse_param(
             config_ptr, module_intervals_ptr, interval, param, "memory"
         );
-    } else {
+    }
+    else {
         try stderr.print("Error: invalid module {s}.\n", .{name});
         std.process.exit(1);
     }
 }
 
-fn parse_param_generic(
+fn parse_param(
     config_ptr: *Config,
     module_intervals_ptr: *Module_intervals,
     interval: u64,
     param: []const u8,
     comptime field: []const u8,
-) !void {
+)
+!void {
     @field(module_intervals_ptr, field) = interval;
     config_ptr.module_list.appendAssumeCapacity(@field(Module, field));
-    try parse_param(
+    try _parse_param(
         &@field(config_ptr, field++"_list"), &config_ptr.str_list, param
     );
 }
@@ -219,11 +227,12 @@ fn parse_param_generic(
 /// tables. An example of a parameter would be `{used} / {total}` for memory. It
 /// Should be split into the tokens `used`, `text`, `total`; and the `str_list`
 /// array should have the string ` / ` appended to it.
-fn parse_param(
+fn _parse_param(
     variable_list: *Variable_list,
     str_list: *Str_list,
     _param: []const u8,
-) !void {
+)
+!void {
     var param = _param;
     if (std.mem.indexOfScalar(u8, param, '{')) |open_i| {
         if (open_i != 0) {

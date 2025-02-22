@@ -43,7 +43,8 @@ pub fn handle_module(
     threads: f32,
     backlight_dir_name: []const u8,
     local: zeit.TimeZone,
-) !void {
+)
+!void {
     switch (module) {
         .separator => {
             try result_ptr.appendSlice(markup.separator);
@@ -82,12 +83,8 @@ pub fn handle_module(
 pub fn update_text(output_ptr: *Output, result_ptr: *std.ArrayList(u8)) !void {
     const config = output_ptr.config;
     for (config.text_list.items) |arg| switch (arg) {
-        .text => {
-            const array = config.str_list.items[output_ptr.text_index];
-            try result_ptr.appendSlice(array.constSlice());
-            output_ptr.text_index += 1;
-        },
-        else => {},
+        .text => try output_ptr.append_text(result_ptr),
+        else  => {},
     };
 }
 
@@ -97,7 +94,8 @@ pub fn update_backlight(
     timestamps_ptr: *Timestamps,
     interval: u64,
     dir_name: []const u8,
-) !void {
+)
+!void {
     const backlight: modules.Backlight = try .init(dir_name);
 
     const prefix: []const u8 = prefix: {
@@ -129,9 +127,7 @@ pub fn update_backlight(
             try result_ptr.appendSlice(array.constSlice());
         },
         .text => {
-            const array = config.str_list.items[output_ptr.text_index];
-            try result_ptr.appendSlice(array.constSlice());
-            output_ptr.text_index += 1;
+            try output_ptr.append_text(result_ptr);
         },
         else => {},
     };
@@ -142,7 +138,8 @@ pub fn update_battery(
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
     interval: u64,
-) !void {
+)
+!void {
     const battery: modules.Battery = try .init();
 
     const prefix = switch (battery.status) {
@@ -196,12 +193,11 @@ pub fn update_battery(
                 const writer = output_ptr.battery_time_remaining.writer();
                 try battery.get_time_remaining(writer);
             }
-            try result_ptr.appendSlice(output_ptr.battery_time_remaining.constSlice());
+            const array = output_ptr.battery_time_remaining;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].constSlice();
-            try result_ptr.appendSlice(slice);
-            output_ptr.text_index += 1;
+            try output_ptr.append_text(result_ptr);
         },
         else => {},
     };
@@ -212,7 +208,8 @@ pub fn update_memory(
     result_ptr: *std.ArrayList(u8),
     timestamps_ptr: *Timestamps,
     interval: u64,
-) !void {
+)
+!void {
     const memory: modules.Memory = try .init();
     try result_ptr.appendSlice("󰍛 ");
 
@@ -228,19 +225,19 @@ pub fn update_memory(
                 const used = memory.get_used();
                 try fmt.memory(output_ptr.memory_used.writer(), used);
             }
-            try result_ptr.appendSlice(output_ptr.memory_used.constSlice());
+            const array = output_ptr.memory_used;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .total => {
             if (update_needed) {
                 output_ptr.memory_total.clear();
                 try fmt.memory(output_ptr.memory_total.writer(), memory.total);
             }
-            try result_ptr.appendSlice(output_ptr.memory_total.constSlice());
+            const array = output_ptr.memory_total;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].constSlice();
-            try result_ptr.appendSlice(slice);
-            output_ptr.text_index += 1;
+            try output_ptr.append_text(result_ptr);
         },
         else => {},
     };
@@ -253,7 +250,8 @@ pub fn update_cpu(
     interval: u64,
     cpu: *modules.Cpu,
     threads: f32,
-) !void {
+)
+!void {
     try result_ptr.appendSlice("󰘚 ");
 
     const update_needed = timestamps_ptr.is_update_needed(
@@ -269,19 +267,19 @@ pub fn update_cpu(
                 output_ptr.uptime.clear();
                 try fmt.time(output_ptr.uptime.writer(), cpu.system_up);
             }
-            try result_ptr.appendSlice(output_ptr.uptime.constSlice());
+            const array = output_ptr.uptime;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .used_percent => {
             if (update_needed) {
                 output_ptr.cpu_usage.clear();
                 try fmt.percent(output_ptr.cpu_usage.writer(), cpu.percent);
             }
-            try result_ptr.appendSlice(output_ptr.cpu_usage.constSlice());
+            const array = output_ptr.cpu_usage;
+            try result_ptr.appendSlice(array.constSlice());
         },
         .text => {
-            const slice = config.str_list.items[output_ptr.text_index].constSlice();
-            try result_ptr.appendSlice(slice);
-            output_ptr.text_index += 1;
+            try output_ptr.append_text(result_ptr);
         },
         else => {},
     };
@@ -291,10 +289,12 @@ pub fn update_time(
     output_ptr: *Output,
     result_ptr: *std.ArrayList(u8),
     local: zeit.TimeZone,
-) !void {
+)
+!void {
     try result_ptr.appendSlice("󰃰 ");
 
-    const time_fmt = output_ptr.config.str_list.items[output_ptr.text_index].constSlice();
+    const config = output_ptr.config;
+    const time_fmt = config.str_list.items[output_ptr.text_index].constSlice();
     output_ptr.text_index += 1;
 
     const now = try zeit.instant(.{});
@@ -305,6 +305,14 @@ pub fn update_time(
     try dt.strftime(output_ptr.time.writer(), time_fmt);
 
     try result_ptr.appendSlice(output_ptr.time.constSlice());
+}
+
+inline fn append_text(output_ptr: *Output, result_ptr: *std.ArrayList(u8))
+!void {
+    const config = output_ptr.config;
+    const array = config.str_list.items[output_ptr.text_index];
+    try result_ptr.appendSlice(array.constSlice());
+    output_ptr.text_index += 1;
 }
 
 // -------------------------------------------------------------------------- //
