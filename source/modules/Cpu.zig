@@ -7,7 +7,7 @@ percent:   f32,
 
 const expect = std.testing.expect;
 
-pub fn update_uptime(cpu_ptr: *Cpu) ! void {
+pub fn update_uptime(cpu: *Cpu) ! void {
     var buf: [32]u8 = undefined;
 
     var file = try std.fs.cwd().openFile("/proc/uptime", .{});
@@ -25,21 +25,21 @@ pub fn update_uptime(cpu_ptr: *Cpu) ! void {
     const system_up = try std.fmt.parseFloat(f32, system_up_str);
     const cpu_idle = try std.fmt.parseFloat(f32, cpu_idle_str);
 
-    cpu_ptr.system_up = system_up;
-    cpu_ptr.cpu_idle = cpu_idle;
+    cpu.system_up = system_up;
+    cpu.cpu_idle = cpu_idle;
 }
 
-pub fn update(cpu_ptr: *Cpu, threads: f32) ! void {
+pub fn update(cpu: *Cpu, threads: f32) ! void {
     @setFloatMode(.optimized);
 
     // Get the old uptime and idletime values.
-    const uptime_1 = cpu_ptr.system_up;
-    const idletime_1 = cpu_ptr.cpu_idle;
+    const uptime_1 = cpu.system_up;
+    const idletime_1 = cpu.cpu_idle;
     
     // Get the new uptime and idletime values.
-    try cpu_ptr.update_uptime();
-    const uptime_2 = cpu_ptr.system_up;
-    const idletime_2 = cpu_ptr.cpu_idle;
+    try cpu.update_uptime();
+    const uptime_2 = cpu.system_up;
+    const idletime_2 = cpu.cpu_idle;
 
     // Calculate the CPU usage.
     const delta_uptime = uptime_2 - uptime_1;
@@ -48,7 +48,7 @@ pub fn update(cpu_ptr: *Cpu, threads: f32) ! void {
     const percent = usage * 100;
 
     // Make sure that the percentage value is in the interval [0, 100].
-    cpu_ptr.percent = if (percent < 0)
+    cpu.percent = if (percent < 0)
         0
     else if (percent > 100)
         100
