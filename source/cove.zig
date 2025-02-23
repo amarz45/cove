@@ -16,7 +16,7 @@ pub fn main() ! void {
 
     // config
     var config: Config = .init(allocator);
-    var module_intervals: Config.Module_intervals = undefined;
+    var module_intervals: Config.Module_intervals = .{};
     const modules_used = try config.parse_config(&module_intervals);
     const update_interval = get_update_interval(&module_intervals);
 
@@ -95,10 +95,18 @@ fn get_update_interval(module_intervals: *const Config.Module_intervals) u64 {
 
     inline for (fields[1..]) |f| {
         const interval = @field(module_intervals, f.name);
-        gcd = std.math.gcd(gcd, interval);
+        gcd = interval_gcd(gcd, interval);
     }
 
-    return gcd;
+    return gcd.?;
+}
+
+fn interval_gcd(_a: ?u64, _b: ?u64) ?u64 {
+    const a = _a orelse
+        return _b;
+    const b = _b orelse
+        return _a;
+    return std.math.gcd(a, b);
 }
 
 // -------------------------------------------------------------------------- //

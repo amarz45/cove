@@ -47,11 +47,11 @@ pub const Variable = enum(u8) {
 };
 
 pub const Module_intervals = struct {
-    backlight: u64,
-    battery:   u64,
-    cpu:       u64,
-    memory:    u64,
-    time:      u64,
+    backlight: ?u64 = null,
+    battery:   ?u64 = null,
+    cpu:       ?u64 = null,
+    memory:    ?u64 = null,
+    time:      ?u64 = null,
 };
 
 pub const Modules_used = packed struct {

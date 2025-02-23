@@ -54,24 +54,24 @@ pub fn handle_module(
         },
         .backlight => {
             try output.update_backlight(
-                result, timestamps, module_intervals.backlight,
+                result, timestamps, module_intervals.backlight.?,
                 backlight_dir_name
             );
         },
         .battery => {
             try output.update_battery(
-                result, timestamps, module_intervals.battery
+                result, timestamps, module_intervals.battery.?
             );
         },
         .cpu => {
             try output.update_cpu(
-                result, timestamps, module_intervals.cpu,
+                result, timestamps, module_intervals.cpu.?,
                 cpu_data, threads
             );
         },
         .memory => {
             try output.update_memory(
-                result, timestamps, module_intervals.memory
+                result, timestamps, module_intervals.memory.?
             );
         },
         .time => {
