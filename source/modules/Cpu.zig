@@ -7,7 +7,7 @@ percent:   f32,
 
 const expect = std.testing.expect;
 
-pub fn update_uptime(cpu_ptr: *Cpu) !void {
+pub fn update_uptime(cpu_ptr: *Cpu) ! void {
     var buf: [32]u8 = undefined;
 
     var file = try std.fs.cwd().openFile("/proc/uptime", .{});
@@ -15,8 +15,9 @@ pub fn update_uptime(cpu_ptr: *Cpu) !void {
 
     var end_index = try file.pread(&buf, 0) - 1;
     if (buf[end_index] != '\n') end_index += 1;
-    const sep_index = std.mem.indexOfScalar(u8, &buf, ' ') orelse
+    const sep_index = std.mem.indexOfScalar(u8, &buf, ' ') orelse {
         @panic("/proc/uptime: space not found.");
+    };
 
     const system_up_str = buf[0..sep_index];
     const cpu_idle_str = buf[(sep_index + 1)..end_index];
@@ -28,7 +29,7 @@ pub fn update_uptime(cpu_ptr: *Cpu) !void {
     cpu_ptr.cpu_idle = cpu_idle;
 }
 
-pub fn update(cpu_ptr: *Cpu, threads: f32) !void {
+pub fn update(cpu_ptr: *Cpu, threads: f32) ! void {
     @setFloatMode(.optimized);
 
     // Get the old uptime and idletime values.

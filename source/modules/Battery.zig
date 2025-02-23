@@ -18,7 +18,7 @@ const Status = enum(u8) {
 
 pub const time_len = "999 h 59 m 59 s".len;
 
-pub fn init() !Battery {
+pub fn init() ! Battery {
     @setFloatMode(.optimized);
 
     const cwd = std.fs.cwd();
@@ -70,20 +70,21 @@ pub fn init() !Battery {
 // The formulas for calculating the battery remaining time are as follows:
 //     - time to empty (discharging) = energy_now / power_now
 //     - time to full (charging) = (energy_full - energy_now) / power_now
-pub fn get_time_remaining(battery_ptr: *const Battery, writer: anytype) !void {
+pub fn get_time_remaining(battery: Battery, writer: anytype) ! void {
     @setFloatMode(.optimized);
 
-    const capacity = battery_ptr.capacity;
-    const stop_threshold = battery_ptr.stop_threshold;
-    const energy_now = battery_ptr.energy_now;
-    const energy_full = battery_ptr.energy_full;
-    const power_now = battery_ptr.power_now;
-    const status = battery_ptr.status;
+    const capacity = battery.capacity;
+    const stop_threshold = battery.stop_threshold;
+    const energy_now = battery.energy_now;
+    const energy_full = battery.energy_full;
+    const power_now = battery.power_now;
+    const status = battery.status;
 
     if (capacity == stop_threshold) {
         _ = try writer.write("~");
         return;
-    } if (power_now == 0) {
+    }
+    if (power_now == 0) {
         _ = try writer.write("\u{221e}"); // infinity
         return;
     }
@@ -107,13 +108,12 @@ pub fn get_time_remaining(battery_ptr: *const Battery, writer: anytype) !void {
     const seconds_total = (minutes_total - minutes_rounded) * 60;
     const seconds: u8   = @intFromFloat(seconds_total);
 
-    if (hours != 0) {
-        try writer.print("{d} h {d:.2} m {d:.2} s", .{hours, minutes, seconds});
-    } else if (minutes != 0) {
-        try writer.print("{d} m {d:.2} s", .{minutes, seconds});
-    } else {
+    if (hours != 0)
+        try writer.print("{d} h {d:.2} m {d:.2} s", .{hours, minutes, seconds})
+    else if (minutes != 0)
+        try writer.print("{d} m {d:.2} s", .{minutes, seconds})
+    else
         try writer.print("{d} s", .{seconds});
-    }
 }
 
 // -------------------------------------------------------------------------- //

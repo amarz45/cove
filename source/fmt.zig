@@ -7,7 +7,7 @@ pub const percent_len = "100 %".len;
 pub const memory_len = "1024 KiB".len;
 pub const time_len = "999 d 23 h 59 m 59 s".len;
 
-pub inline fn percent(writer: anytype, _percent: anytype) !void {
+pub inline fn percent(writer: anytype, _percent: anytype) ! void {
     try writer.print("{d:.0} %", .{_percent});
 }
 
@@ -40,7 +40,7 @@ test percent {
 
 // Given a buffer and the memory amount in kibibytes, write to the buffer a
 // string with the amount in a human-readable format with the appropriate unit.
-pub fn memory(writer: anytype, kibibytes: f32) !void {
+pub fn memory(writer: anytype, kibibytes: f32) ! void {
     @setFloatMode(.optimized);
 
     const mem, const unit: *const [3]u8 = mem: {
@@ -111,7 +111,7 @@ test memory {
     try expect_eql_str(array.slice(), "1.00 TiB");
 }
 
-pub fn time(writer: anytype, seconds_total: f32) !void {
+pub fn time(writer: anytype, seconds_total: f32) ! void {
     @setFloatMode(.optimized);
 
     if (seconds_total < 60) {

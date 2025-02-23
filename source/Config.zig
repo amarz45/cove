@@ -60,11 +60,25 @@ pub const Modules_used = packed struct {
     time:      bool = false,
 };
 
+pub fn init(allocator: std.mem.Allocator) Config {
+    return .{
+        .module_list    = .init(allocator),
+        .text_list      = .init(allocator),
+        .backlight_list = .init(allocator),
+        .battery_list   = .init(allocator),
+        .cpu_list       = .init(allocator),
+        .drive_list     = .init(allocator),
+        .memory_list    = .init(allocator),
+        .time_list      = .init(allocator),
+        .str_list       = .init(allocator),
+    };
+}
+
 pub fn parse_config(
-    config_ptr: *Config,
-    module_intervals_ptr: *Module_intervals
+    config: *Config,
+    module_intervals: *Module_intervals
 )
-!Modules_used {
+! Modules_used {
     const xdg_config_home = std.posix.getenv("XDG_CONFIG_HOME");
     const config_dir = xdg_config_home orelse config_dir: {
         var buf: [64]u8 = undefined;
@@ -102,14 +116,14 @@ pub fn parse_config(
 
     const output = cfg.directives[0].children;
     const directives_len = output.directives_len;
-    try config_ptr.module_list.ensureTotalCapacityPrecise(directives_len);
+    try config.module_list.ensureTotalCapacityPrecise(directives_len);
 
     var modules_used: Modules_used = .{};
 
     for (0..directives_len) |i| {
         try parse_module(
-            config_ptr, &output.directives[i], &modules_used,
-            module_intervals_ptr
+            config, &output.directives[i], &modules_used,
+            module_intervals
         );
     }
 
@@ -117,12 +131,12 @@ pub fn parse_config(
 }
 
 fn parse_module(
-    config_ptr: *Config,
+    config: *Config,
     module_cfg: *allowzero c.scfg_directive,
-    modules_used_ptr: *Modules_used,
-    module_intervals_ptr: *Module_intervals,
+    modules_used: *Modules_used,
+    module_intervals: *Module_intervals,
 )
-!void {
+! void {
     const name = std.mem.span(module_cfg.name);
     const params_len = module_cfg.params_len;
 
@@ -133,7 +147,7 @@ fn parse_module(
             );
             std.process.exit(1);
         }
-        config_ptr.module_list.appendAssumeCapacity(.separator);
+        config.module_list.appendAssumeCapacity(.separator);
         return;
     }
 
@@ -143,8 +157,8 @@ fn parse_module(
     }
 
     if (std.mem.eql(u8, name, "text")) {
-        config_ptr.module_list.appendAssumeCapacity(.text);
-        try config_ptr.str_list.append(try .fromSlice("Example"));
+        config.module_list.appendAssumeCapacity(.text);
+        try config.str_list.append(try .fromSlice("Example"));
         return;
     }
 
@@ -176,30 +190,30 @@ fn parse_module(
 
     if (std.mem.eql(u8, name, "backlight")) {
         try parse_param(
-            config_ptr, module_intervals_ptr, interval, param, "backlight"
+            config, module_intervals, interval, param, "backlight"
         );
-        modules_used_ptr.backlight = true;
+        modules_used.backlight = true;
     }
     else if (std.mem.eql(u8, name, "cpu")) {
         try parse_param(
-            config_ptr, module_intervals_ptr, interval, param, "cpu"
+            config, module_intervals, interval, param, "cpu"
         );
-        modules_used_ptr.cpu = true;
+        modules_used.cpu = true;
     }
     else if (std.mem.eql(u8, name, "time")) {
         try parse_param(
-            config_ptr, module_intervals_ptr, interval, param, "time"
+            config, module_intervals, interval, param, "time"
         );
-        modules_used_ptr.time = true;
+        modules_used.time = true;
     }
     else if (std.mem.eql(u8, name, "battery")) {
         try parse_param(
-            config_ptr, module_intervals_ptr, interval, param, "battery"
+            config, module_intervals, interval, param, "battery"
         );
     }
     else if (std.mem.eql(u8, name, "memory")) {
         try parse_param(
-            config_ptr, module_intervals_ptr, interval, param, "memory"
+            config, module_intervals, interval, param, "memory"
         );
     }
     else {
@@ -209,17 +223,17 @@ fn parse_module(
 }
 
 fn parse_param(
-    config_ptr: *Config,
-    module_intervals_ptr: *Module_intervals,
+    config: *Config,
+    module_intervals: *Module_intervals,
     interval: u64,
     param: []const u8,
     comptime field: []const u8,
 )
-!void {
-    @field(module_intervals_ptr, field) = interval;
-    config_ptr.module_list.appendAssumeCapacity(@field(Module, field));
+! void {
+    @field(module_intervals, field) = interval;
+    config.module_list.appendAssumeCapacity(@field(Module, field));
     try _parse_param(
-        &@field(config_ptr, field++"_list"), &config_ptr.str_list, param
+        &@field(config, field++"_list"), &config.str_list, param
     );
 }
 
@@ -232,7 +246,7 @@ fn _parse_param(
     str_list: *Str_list,
     _param: []const u8,
 )
-!void {
+! void {
     var param = _param;
     if (std.mem.indexOfScalar(u8, param, '{')) |open_i| {
         if (open_i != 0) {
@@ -327,7 +341,7 @@ test parse_param {
     try expect_eql_str(str_list.items[0].slice(), "lorem ipsum");
 }
 
-fn var_from_str(str: []const u8) !Variable {
+fn var_from_str(str: []const u8) ! Variable {
     return if (std.mem.eql(u8, str, "brightness%"))
         .percent
     else if (std.mem.eql(u8, str, "remaining"))
@@ -352,7 +366,7 @@ fn var_from_str(str: []const u8) !Variable {
     };
 }
 
-fn to_nanoseconds(num: u64, unit: []const u8) !u64 {
+fn to_nanoseconds(num: u64, unit: []const u8) ! u64 {
     return if (std.mem.eql(u8, unit, "s"))
         num * 1_000_000_000
     else if (std.mem.eql(u8, unit, "ms"))

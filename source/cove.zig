@@ -8,24 +8,14 @@ const Timestamps = @import("Timestamps.zig");
 
 const stdout = std.io.getStdOut().writer();
 
-pub fn main() !void {
+pub fn main() ! void {
     // allocator
     var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
     defer if (builtin.mode == .Debug) arena.deinit();
     const allocator = arena.allocator();
 
     // config
-    var config: Config = .{
-        .module_list    = .init(allocator),
-        .text_list      = .init(allocator),
-        .backlight_list = .init(allocator),
-        .battery_list   = .init(allocator),
-        .cpu_list       = .init(allocator),
-        .drive_list     = .init(allocator),
-        .memory_list    = .init(allocator),
-        .time_list      = .init(allocator),
-        .str_list       = .init(allocator),
-    };
+    var config: Config = .init(allocator);
     var module_intervals: Config.Module_intervals = undefined;
     const modules_used = try config.parse_config(&module_intervals);
     const update_interval = get_update_interval(&module_intervals);

@@ -6,7 +6,7 @@ percent: f32,
 pub const base_dir_name = "/sys/class/backlight";
 const Self = @This();
 
-pub fn init(dir_name: []const u8) !Self {
+pub fn init(dir_name: []const u8) ! Self {
     @setFloatMode(.optimized);
 
     const cwd = std.fs.cwd();
@@ -45,8 +45,9 @@ test "backlight" {
     defer base_dir.close();
 
     var iter = base_dir.iterate();
-    const entry = try iter.next() orelse
+    const entry = try iter.next() orelse {
         @panic("Backlight directory not found.");
+    };
 
     const dir_name = entry.name;
     const backlight: Self = try .init(dir_name);

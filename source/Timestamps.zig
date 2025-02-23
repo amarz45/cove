@@ -14,17 +14,17 @@ time:      ?i128 = null,
 /// An update is needed if the given timestamp is null or we have reached or
 /// passed the update interval.
 pub fn is_update_needed(
-    timestamps_ptr: *Timestamps,
+    timestamps: *Timestamps,
     interval: u64,
     comptime field: []const u8,
 )
 bool {
     const timestamp_new = std.time.nanoTimestamp();
-    if (@field(timestamps_ptr, field)) |timestamp_old| {
+    if (@field(timestamps, field)) |timestamp_old| {
         if (timestamp_new - timestamp_old >= interval) {
             //= Update interval reached or passed
             @branchHint(.unlikely);
-            @field(timestamps_ptr, field) = timestamp_new;
+            @field(timestamps, field) = timestamp_new;
             return true;
         } else {
             //= Update interval not reached yet
@@ -34,7 +34,7 @@ bool {
     } else {
         //= This code will only ever be reached on the first iteration.
         @branchHint(.cold);
-        @field(timestamps_ptr, field) = timestamp_new;
+        @field(timestamps, field) = timestamp_new;
         return true;
     }
 }

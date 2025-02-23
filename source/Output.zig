@@ -34,68 +34,68 @@ const Array_uptime = std.BoundedArray(u8, fmt.time_len);
 const Array_time = std.BoundedArray(u8, 128);
 
 pub fn handle_module(
-    output_ptr: *Output,
-    result_ptr: *std.ArrayList(u8),
+    output: *Output,
+    result: *std.ArrayList(u8),
     module: Config.Module,
-    module_intervals_ptr: *Config.Module_intervals,
-    timestamps_ptr: *Timestamps,
-    cpu_data_ptr: *modules.Cpu,
+    module_intervals: *Config.Module_intervals,
+    timestamps: *Timestamps,
+    cpu_data: *modules.Cpu,
     threads: f32,
     backlight_dir_name: []const u8,
     local: zeit.TimeZone,
 )
-!void {
+! void {
     switch (module) {
         .separator => {
-            try result_ptr.appendSlice(markup.separator);
+            try result.appendSlice(markup.separator);
         },
         .text => {
-            try output_ptr.update_text(result_ptr);
+            try output.update_text(result);
         },
         .backlight => {
-            try output_ptr.update_backlight(
-                result_ptr, timestamps_ptr, module_intervals_ptr.backlight,
+            try output.update_backlight(
+                result, timestamps, module_intervals.backlight,
                 backlight_dir_name
             );
         },
         .battery => {
-            try output_ptr.update_battery(
-                result_ptr, timestamps_ptr, module_intervals_ptr.battery
+            try output.update_battery(
+                result, timestamps, module_intervals.battery
             );
         },
         .cpu => {
-            try output_ptr.update_cpu(
-                result_ptr, timestamps_ptr, module_intervals_ptr.cpu,
-                cpu_data_ptr, threads
+            try output.update_cpu(
+                result, timestamps, module_intervals.cpu,
+                cpu_data, threads
             );
         },
         .memory => {
-            try output_ptr.update_memory(
-                result_ptr, timestamps_ptr, module_intervals_ptr.memory
+            try output.update_memory(
+                result, timestamps, module_intervals.memory
             );
         },
         .time => {
-            try output_ptr.update_time(result_ptr, local);
+            try output.update_time(result, local);
         },
     }
 }
 
-pub fn update_text(output_ptr: *Output, result_ptr: *std.ArrayList(u8)) !void {
-    const config = output_ptr.config;
+pub fn update_text(output: *Output, result: *std.ArrayList(u8)) ! void {
+    const config = output.config;
     for (config.text_list.items) |arg| switch (arg) {
-        .text => try output_ptr.append_text(result_ptr),
+        .text => try output.append_text(result),
         else  => {},
     };
 }
 
 pub fn update_backlight(
-    output_ptr: *Output,
-    result_ptr: *std.ArrayList(u8),
-    timestamps_ptr: *Timestamps,
+    output: *Output,
+    result: *std.ArrayList(u8),
+    timestamps: *Timestamps,
     interval: u64,
     dir_name: []const u8,
 )
-!void {
+! void {
     const backlight: modules.Backlight = try .init(dir_name);
 
     const prefix: []const u8 = prefix: {
@@ -109,37 +109,37 @@ pub fn update_backlight(
             "󰃠";
     }++" ";
 
-    try result_ptr.appendSlice(prefix);
+    try result.appendSlice(prefix);
 
-    const update_needed = timestamps_ptr.is_update_needed(
+    const update_needed = timestamps.is_update_needed(
         interval, "backlight"
     );
 
-    const config = output_ptr.config;
+    const config = output.config;
     for (config.backlight_list.items) |arg| switch (arg) {
         .percent => {
             if (update_needed) {
-                output_ptr.backlight_percent.clear();
-                const writer = output_ptr.backlight_percent.writer();
+                output.backlight_percent.clear();
+                const writer = output.backlight_percent.writer();
                 try fmt.percent(writer, backlight.percent);
             }
-            const array = output_ptr.backlight_percent;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.backlight_percent;
+            try result.appendSlice(array.constSlice());
         },
         .text => {
-            try output_ptr.append_text(result_ptr);
+            try output.append_text(result);
         },
         else => {},
     };
 }
 
 pub fn update_battery(
-    output_ptr: *Output,
-    result_ptr: *std.ArrayList(u8),
-    timestamps_ptr: *Timestamps,
+    output: *Output,
+    result: *std.ArrayList(u8),
+    timestamps: *Timestamps,
     interval: u64,
 )
-!void {
+! void {
     const battery: modules.Battery = try .init();
 
     const prefix = switch (battery.status) {
@@ -155,22 +155,22 @@ pub fn update_battery(
         },
     }++" ";
 
-    try result_ptr.appendSlice(prefix);
+    try result.appendSlice(prefix);
 
-    const update_needed = timestamps_ptr.is_update_needed(
+    const update_needed = timestamps.is_update_needed(
         interval, "battery"
     );
 
-    const config = output_ptr.config;
+    const config = output.config;
     for (config.battery_list.items) |arg| switch (arg) {
         .remaining_percent => {
             if (update_needed) {
-                output_ptr.battery_capacity.clear();
-                const writer = output_ptr.battery_capacity.writer();
+                output.battery_capacity.clear();
+                const writer = output.battery_capacity.writer();
                 try fmt.percent(writer, battery.capacity);
             }
-            const array = output_ptr.battery_capacity;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.battery_capacity;
+            try result.appendSlice(array.constSlice());
         },
         .status => {
             if (update_needed) {
@@ -180,139 +180,139 @@ pub fn update_battery(
                     .not_charging => "Not charging",
                     else          => "Unknown",
                 };
-                output_ptr.battery_status.clear();
-                const writer = output_ptr.battery_status.writer();
+                output.battery_status.clear();
+                const writer = output.battery_status.writer();
                 _ = try writer.write(status);
             }
-            const array = output_ptr.battery_status;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.battery_status;
+            try result.appendSlice(array.constSlice());
         },
         .time_remaining => {
             if (update_needed) {
-                output_ptr.battery_time_remaining.clear();
-                const writer = output_ptr.battery_time_remaining.writer();
+                output.battery_time_remaining.clear();
+                const writer = output.battery_time_remaining.writer();
                 try battery.get_time_remaining(writer);
             }
-            const array = output_ptr.battery_time_remaining;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.battery_time_remaining;
+            try result.appendSlice(array.constSlice());
         },
         .text => {
-            try output_ptr.append_text(result_ptr);
+            try output.append_text(result);
         },
         else => {},
     };
 }
 
 pub fn update_memory(
-    output_ptr: *Output,
-    result_ptr: *std.ArrayList(u8),
-    timestamps_ptr: *Timestamps,
+    output: *Output,
+    result: *std.ArrayList(u8),
+    timestamps: *Timestamps,
     interval: u64,
 )
-!void {
+! void {
     const memory: modules.Memory = try .init();
-    try result_ptr.appendSlice("󰍛 ");
+    try result.appendSlice("󰍛 ");
 
-    const update_needed = timestamps_ptr.is_update_needed(
+    const update_needed = timestamps.is_update_needed(
         interval, "memory"
     );
 
-    const config = output_ptr.config;
+    const config = output.config;
     for (config.memory_list.items) |arg| switch (arg) {
         .used => {
             if (update_needed) {
-                output_ptr.memory_used.clear();
+                output.memory_used.clear();
                 const used = memory.get_used();
-                try fmt.memory(output_ptr.memory_used.writer(), used);
+                try fmt.memory(output.memory_used.writer(), used);
             }
-            const array = output_ptr.memory_used;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.memory_used;
+            try result.appendSlice(array.constSlice());
         },
         .total => {
             if (update_needed) {
-                output_ptr.memory_total.clear();
-                try fmt.memory(output_ptr.memory_total.writer(), memory.total);
+                output.memory_total.clear();
+                try fmt.memory(output.memory_total.writer(), memory.total);
             }
-            const array = output_ptr.memory_total;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.memory_total;
+            try result.appendSlice(array.constSlice());
         },
         .text => {
-            try output_ptr.append_text(result_ptr);
+            try output.append_text(result);
         },
         else => {},
     };
 }
 
 pub fn update_cpu(
-    output_ptr: *Output,
-    result_ptr: *std.ArrayList(u8),
-    timestamps_ptr: *Timestamps,
+    output: *Output,
+    result: *std.ArrayList(u8),
+    timestamps: *Timestamps,
     interval: u64,
     cpu: *modules.Cpu,
     threads: f32,
 )
-!void {
-    try result_ptr.appendSlice("󰘚 ");
+! void {
+    try result.appendSlice("󰘚 ");
 
-    const update_needed = timestamps_ptr.is_update_needed(
+    const update_needed = timestamps.is_update_needed(
         interval, "cpu"
     );
 
     if (update_needed) try cpu.update(threads);
 
-    const config = output_ptr.config;
+    const config = output.config;
     for (config.cpu_list.items) |arg| switch (arg) {
         .uptime => {
             if (update_needed) {
-                output_ptr.uptime.clear();
-                try fmt.time(output_ptr.uptime.writer(), cpu.system_up);
+                output.uptime.clear();
+                try fmt.time(output.uptime.writer(), cpu.system_up);
             }
-            const array = output_ptr.uptime;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.uptime;
+            try result.appendSlice(array.constSlice());
         },
         .used_percent => {
             if (update_needed) {
-                output_ptr.cpu_usage.clear();
-                try fmt.percent(output_ptr.cpu_usage.writer(), cpu.percent);
+                output.cpu_usage.clear();
+                try fmt.percent(output.cpu_usage.writer(), cpu.percent);
             }
-            const array = output_ptr.cpu_usage;
-            try result_ptr.appendSlice(array.constSlice());
+            const array = output.cpu_usage;
+            try result.appendSlice(array.constSlice());
         },
         .text => {
-            try output_ptr.append_text(result_ptr);
+            try output.append_text(result);
         },
         else => {},
     };
 }
 
 pub fn update_time(
-    output_ptr: *Output,
-    result_ptr: *std.ArrayList(u8),
+    output: *Output,
+    result: *std.ArrayList(u8),
     local: zeit.TimeZone,
 )
-!void {
-    try result_ptr.appendSlice("󰃰 ");
+! void {
+    try result.appendSlice("󰃰 ");
 
-    const config = output_ptr.config;
-    const time_fmt = config.str_list.items[output_ptr.text_index].constSlice();
-    output_ptr.text_index += 1;
+    const config = output.config;
+    const time_fmt = config.str_list.items[output.text_index].constSlice();
+    output.text_index += 1;
 
     const now = try zeit.instant(.{});
     const now_local = now.in(&local);
     const dt = now_local.time();
 
-    output_ptr.time.clear();
-    try dt.strftime(output_ptr.time.writer(), time_fmt);
+    output.time.clear();
+    try dt.strftime(output.time.writer(), time_fmt);
 
-    try result_ptr.appendSlice(output_ptr.time.constSlice());
+    try result.appendSlice(output.time.constSlice());
 }
 
-inline fn append_text(output_ptr: *Output, result_ptr: *std.ArrayList(u8))
-!void {
-    const config = output_ptr.config;
-    const array = config.str_list.items[output_ptr.text_index];
-    try result_ptr.appendSlice(array.constSlice());
-    output_ptr.text_index += 1;
+inline fn append_text(output: *Output, result: *std.ArrayList(u8))
+! void {
+    const config = output.config;
+    const array = config.str_list.items[output.text_index];
+    try result.appendSlice(array.constSlice());
+    output.text_index += 1;
 }
 
 // -------------------------------------------------------------------------- //
