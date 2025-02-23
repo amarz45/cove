@@ -16,9 +16,11 @@ pub fn main() ! void {
 
     // config
     var config: Config = .init(allocator);
-    var module_intervals: Config.Module_intervals = .{};
+    var module_intervals: Config.Module_intervals = undefined;
     const modules_used = try config.parse_config(&module_intervals);
-    const update_interval = get_update_interval(&module_intervals);
+    const update_interval = get_update_interval(
+        &module_intervals, modules_used
+    );
 
     // output
     var output: Output = .{ .config = config };
@@ -89,24 +91,30 @@ pub fn main() ! void {
     }
 }
 
-fn get_update_interval(module_intervals: *const Config.Module_intervals) u64 {
+fn get_update_interval(
+    module_intervals: *const Config.Module_intervals,
+    modules_used: Config.Modules_used,
+)
+u64 {
     const fields = std.meta.fields(Config.Module_intervals);
-    var gcd = @field(module_intervals, fields[0].name);
 
-    inline for (fields[1..]) |f| {
-        const interval = @field(module_intervals, f.name);
-        gcd = interval_gcd(gcd, interval);
+    var gcd = @field(module_intervals, fields[0].name);
+    var gcd_defined = @field(modules_used, fields[0].name);
+
+    inline for (fields[1..]) |field| {
+        const interval = @field(module_intervals, field.name);
+        const interval_defined = @field(modules_used, field.name);
+
+        if (!gcd_defined) {
+            gcd = interval;
+            gcd_defined = interval_defined;
+        }
+        else if (interval_defined) {
+            gcd = std.math.gcd(gcd, interval);
+        }
     }
 
-    return gcd.?;
-}
-
-fn interval_gcd(_a: ?u64, _b: ?u64) ?u64 {
-    const a = _a orelse
-        return _b;
-    const b = _b orelse
-        return _a;
-    return std.math.gcd(a, b);
+    return gcd;
 }
 
 // -------------------------------------------------------------------------- //

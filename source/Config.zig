@@ -47,16 +47,18 @@ pub const Variable = enum(u8) {
 };
 
 pub const Module_intervals = struct {
-    backlight: ?u64 = null,
-    battery:   ?u64 = null,
-    cpu:       ?u64 = null,
-    memory:    ?u64 = null,
-    time:      ?u64 = null,
+    backlight: u64,
+    battery:   u64,
+    cpu:       u64,
+    memory:    u64,
+    time:      u64,
 };
 
 pub const Modules_used = packed struct {
     backlight: bool = false,
+    battery:   bool = false,
     cpu:       bool = false,
+    memory:    bool = false,
     time:      bool = false,
 };
 
@@ -210,11 +212,13 @@ fn parse_module(
         try parse_param(
             config, module_intervals, interval, param, "battery"
         );
+        modules_used.battery = true;
     }
     else if (std.mem.eql(u8, name, "memory")) {
         try parse_param(
             config, module_intervals, interval, param, "memory"
         );
+        modules_used.memory = true;
     }
     else {
         try stderr.print("Error: invalid module {s}.\n", .{name});
