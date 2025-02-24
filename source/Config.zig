@@ -33,7 +33,7 @@ pub const Module = enum(u8) {
     time,
 };
 
-pub const Variable = enum(u8) {
+pub const Variable = enum {
     text,
     percent,
     remaining,
@@ -44,6 +44,25 @@ pub const Variable = enum(u8) {
     uptime,
     used,
     used_percent,
+
+    const hashmap: std.StaticStringMap(Variable) = .initComptime(.{
+        .{ "brightness%", .percent },
+        .{ "remaining", .remaining },
+        .{ "remaining%", .remaining_percent },
+        .{ "status", .status },
+        .{ "time_remaining", .time_remaining },
+        .{ "total", .total },
+        .{ "uptime", .uptime },
+        .{ "used", .used },
+        .{ "used%", .used_percent },
+    });
+
+    fn get(str: []const u8) ! Variable {
+        return hashmap.get(str) orelse {
+            try stderr.print("Error: invalid variable ‘{s}’.\n", .{str});
+            std.process.exit(1);
+        };
+    }
 };
 
 pub const Module_intervals = struct {
@@ -260,7 +279,7 @@ fn _parse_param(
 
         while (std.mem.indexOfScalar(u8, param, '}')) |close_i| {
             const arg = param[(open_i + 1)..close_i];
-            try variable_list.append(try var_from_str(arg));
+            try variable_list.append(try Variable.get(arg));
 
             param = param[(close_i + 1)..];
             if (std.mem.indexOfScalar(u8, param, '{')) |next_open_i| {
@@ -343,31 +362,6 @@ test parse_param {
     try expect_eql(variable_list.items[0], .text);
     try expect_eql(str_list.items.len, 1);
     try expect_eql_str(str_list.items[0].slice(), "lorem ipsum");
-}
-
-fn var_from_str(str: []const u8) ! Variable {
-    return if (std.mem.eql(u8, str, "brightness%"))
-        .percent
-    else if (std.mem.eql(u8, str, "remaining"))
-        .remaining
-    else if (std.mem.eql(u8, str, "remaining%"))
-        .remaining_percent
-    else if (std.mem.eql(u8, str, "status"))
-        .status
-    else if (std.mem.eql(u8, str, "time_remaining"))
-        .time_remaining
-    else if (std.mem.eql(u8, str, "total"))
-        .total
-    else if (std.mem.eql(u8, str, "uptime"))
-        .uptime
-    else if (std.mem.eql(u8, str, "used"))
-        .used
-    else if (std.mem.eql(u8, str, "used%"))
-        .used_percent
-    else {
-        try stderr.print("Error: invalid variable ‘{s}’.\n", .{str});
-        std.process.exit(1);
-    };
 }
 
 fn to_nanoseconds(num: u64, unit: []const u8) ! u64 {
