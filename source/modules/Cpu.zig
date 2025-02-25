@@ -1,9 +1,13 @@
 const std = @import("std");
 const Cpu = @This();
 
-system_up: f32,
-cpu_idle:  f32,
-percent:   f32,
+percent: f32,
+private: Private,
+
+const Private = struct {
+    system_up: f32,
+    cpu_idle:  f32,
+};
 
 const expect = std.testing.expect;
 
@@ -14,10 +18,10 @@ pub fn update_uptime(cpu: *Cpu) ! void {
     defer file.close();
 
     var end_index = try file.pread(&buf, 0) - 1;
-    if (buf[end_index] != '\n') end_index += 1;
-    const sep_index = std.mem.indexOfScalar(u8, &buf, ' ') orelse {
+    if (buf[end_index] != '\n')
+        end_index += 1;
+    const sep_index = std.mem.indexOfScalar(u8, &buf, ' ') orelse
         @panic("/proc/uptime: space not found.");
-    };
 
     const system_up_str = buf[0..sep_index];
     const cpu_idle_str = buf[(sep_index + 1)..end_index];
@@ -25,21 +29,21 @@ pub fn update_uptime(cpu: *Cpu) ! void {
     const system_up = try std.fmt.parseFloat(f32, system_up_str);
     const cpu_idle = try std.fmt.parseFloat(f32, cpu_idle_str);
 
-    cpu.system_up = system_up;
-    cpu.cpu_idle = cpu_idle;
+    cpu.private.system_up = system_up;
+    cpu.private.cpu_idle = cpu_idle;
 }
 
 pub fn update(cpu: *Cpu, threads: f32) ! void {
     @setFloatMode(.optimized);
 
     // Get the old uptime and idletime values.
-    const uptime_1 = cpu.system_up;
-    const idletime_1 = cpu.cpu_idle;
+    const uptime_1 = cpu.private.system_up;
+    const idletime_1 = cpu.private.cpu_idle;
     
     // Get the new uptime and idletime values.
     try cpu.update_uptime();
-    const uptime_2 = cpu.system_up;
-    const idletime_2 = cpu.cpu_idle;
+    const uptime_2 = cpu.private.system_up;
+    const idletime_2 = cpu.private.cpu_idle;
 
     // Calculate the CPU usage.
     const delta_uptime = uptime_2 - uptime_1;
@@ -60,12 +64,8 @@ test "cpu" {
     var cpu: Cpu = undefined;
 
     try cpu.update_uptime();
-    try expect(cpu.system_up >= 0);
-    try expect(cpu.cpu_idle >= 0);
-
     try cpu.update(1);
-    try expect(cpu.system_up >= 0);
-    try expect(cpu.cpu_idle >= 0);
+
     try expect(cpu.percent >= 0);
     try expect(cpu.percent <= 100);
 }

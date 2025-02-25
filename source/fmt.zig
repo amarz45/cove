@@ -43,29 +43,30 @@ test percent {
 pub fn memory(writer: anytype, kibibytes: f32) ! void {
     @setFloatMode(.optimized);
 
-    const mem, const unit: *const [3]u8 = mem: {
+    const mem,
+    const unit: *const [3]u8 = b: {
         if (kibibytes < 1 << 10) {
             @branchHint(.cold);
-            break :mem .{kibibytes, "KiB"};
+            break :b .{kibibytes, "KiB"};
         } else if (kibibytes < 1 << 20) {
             @branchHint(.unlikely);
-            break :mem .{kibibytes / (1 << 10), "MiB"};
+            break :b .{kibibytes / (1 << 10), "MiB"};
         } else if (kibibytes < 1 << 30) {
             @branchHint(.likely);
-            break :mem .{kibibytes / (1 << 20), "GiB"};
+            break :b .{kibibytes / (1 << 20), "GiB"};
         } else {
             @branchHint(.unlikely);
-            break :mem .{kibibytes / (1 << 30), "TiB"};
+            break :b .{kibibytes / (1 << 30), "TiB"};
         }
     };
 
-    if (mem < 10) {
-        try writer.print("{d:.2} {s}", .{mem, unit});
-    } else if (mem < 100) {
-        try writer.print("{d:.1} {s}", .{mem, unit});
-    } else {
-        try writer.print("{d:.0} {s}", .{mem, unit});
-    }
+    return
+    if (mem < 10)
+        writer.print("{d:.2} {s}", .{mem, unit})
+    else if (mem < 100)
+        writer.print("{d:.1} {s}", .{mem, unit})
+    else
+        writer.print("{d:.0} {s}", .{mem, unit});
 }
 
 test memory {
@@ -109,79 +110,6 @@ test memory {
     array.clear();
     try memory(array.writer(), 1 << 30);
     try expect_eql_str(array.slice(), "1.00 TiB");
-}
-
-pub fn time(writer: anytype, seconds_total: f32) ! void {
-    @setFloatMode(.optimized);
-
-    if (seconds_total < 60) {
-        try writer.print("{d:.0} s", .{seconds_total});
-    } else if (seconds_total < 60*60) {
-        const minutes_total = seconds_total / 60;
-        const data = minutes_seconds(minutes_total);
-
-        try writer.print("{d} m {d:02} s", .{data.minutes, data.seconds});
-    } else if (seconds_total < 60*60*24) {
-        @branchHint(.likely);
-
-        const hours_total = seconds_total / (60*60);
-        const data = hours_minutes_seconds(hours_total);
-
-        try writer.print(
-            "{d} h {d:02} m {d:02} s",
-            .{data.hours, data.minutes, data.seconds}
-        );
-    } else {
-        const days_total = seconds_total / (60*60*24);
-        const data = days_hours_minutes_seconds(days_total);
-
-        try writer.print(
-            "{d} d {d:02} h {d:02} m {d:02} s",
-            .{data.days, data.hours, data.minutes, data.seconds}
-        );
-    }
-}
-
-// Separate an irrational number of days into integer days, hours, minutes, and
-// seconds.
-inline fn days_hours_minutes_seconds(days_total: f32) struct {
-    days:    f32,
-    hours:   f32,
-    minutes: f32,
-    seconds: f32,
-} {
-    const days = @trunc(days_total);
-    const hours_total = (days_total - days) * 24;
-    const data = hours_minutes_seconds(hours_total);
-    return .{
-        .days    = days,
-        .hours   = data.hours,
-        .minutes = data.minutes,
-        .seconds = data.seconds,
-    };
-}
-
-// Separate an irrational number of hours into integer hours, minutes, and
-// seconds.
-inline fn hours_minutes_seconds(hours_total: f32) struct {
-    hours:   f32,
-    minutes: f32,
-    seconds: f32,
-} {
-    const hours = @trunc(hours_total);
-    const minutes_total = (hours_total - hours) * 60;
-    const data = minutes_seconds(minutes_total);
-    return .{ .hours = hours, .minutes = data.minutes, .seconds = data.seconds };
-}
-
-// Separate an irrational number of minutes into integer minutes and seconds.
-inline fn minutes_seconds(minutes_total: f32) struct {
-    minutes: f32,
-    seconds: f32,
-} {
-    const minutes = @trunc(minutes_total);
-    const seconds = @round((minutes_total - minutes) * 60);
-    return .{ .minutes = minutes, .seconds = seconds };
 }
 
 // -------------------------------------------------------------------------- //

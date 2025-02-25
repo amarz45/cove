@@ -46,15 +46,15 @@ pub const Variable = enum {
     used_percent,
 
     const hashmap: std.StaticStringMap(Variable) = .initComptime(.{
-        .{ "brightness%", .percent },
-        .{ "remaining", .remaining },
-        .{ "remaining%", .remaining_percent },
-        .{ "status", .status },
-        .{ "time_remaining", .time_remaining },
-        .{ "total", .total },
-        .{ "uptime", .uptime },
-        .{ "used", .used },
-        .{ "used%", .used_percent },
+        .{"brightness%",    .percent          },
+        .{"remaining",      .remaining        },
+        .{"remaining%",     .remaining_percent},
+        .{"status",         .status           },
+        .{"time_remaining", .time_remaining   },
+        .{"total",          .total            },
+        .{"uptime",         .uptime           },
+        .{"used",           .used             },
+        .{"used%",          .used_percent     },
     });
 
     fn get(str: []const u8) ! Variable {
@@ -101,13 +101,13 @@ pub fn parse_config(
 )
 ! Modules_used {
     const xdg_config_home = std.posix.getenv("XDG_CONFIG_HOME");
-    const config_dir = xdg_config_home orelse config_dir: {
+    const config_dir = xdg_config_home orelse b: {
         var buf: [64]u8 = undefined;
         const home = std.posix.getenv("HOME") orelse {
             try stderr.writeAll("Home directory not found!\n");
             std.process.exit(1);
         };
-        break :config_dir try std.fmt.bufPrint(&buf, "{s}/.config", .{home});
+        break :b try std.fmt.bufPrint(&buf, "{s}/.config", .{home});
     };
 
     var config_file_buf: [64]u8 = undefined;

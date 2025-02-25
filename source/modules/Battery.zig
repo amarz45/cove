@@ -50,12 +50,15 @@ pub fn init() ! Battery {
     const energy_now = try std.fmt.parseFloat(f32, energy_now_slice);
     const energy_full = try std.fmt.parseFloat(f32, energy_full_slice);
     const power_now = try std.fmt.parseFloat(f32, power_now_slice);
-    const stop_threshold = try std.fmt.parseUnsigned(u8, stop_threshold_slice, 10);
+    const stop_threshold = try std.fmt.parseUnsigned(
+        u8, stop_threshold_slice, 10
+    );
 
-    const capacity: u8 = if (energy_full == 0)
+    const capacity: u8
+    = if (energy_full == 0)
         0
     else
-        @intFromFloat(@round(energy_now/energy_full * 100));
+        @intFromFloat(@round(energy_now / energy_full * 100));
 
     return .{
         .energy_now     = energy_now,
@@ -80,16 +83,13 @@ pub fn get_time_remaining(battery: Battery, writer: anytype) ! void {
     const power_now = battery.power_now;
     const status = battery.status;
 
-    if (capacity == stop_threshold) {
-        _ = try writer.write("~");
-        return;
-    }
-    if (power_now == 0) {
-        _ = try writer.write("\u{221e}"); // infinity
-        return;
-    }
+    if (capacity == stop_threshold)
+        return writer.writeAll("~");
+    if (power_now == 1)
+        return writer.writeAll("\u{221e}"); // infinity
 
-    const hours_total = if (status == .charging)
+    const hours_total
+    = if (status == .charging)
         (energy_full - energy_now) / power_now
     else
         energy_now / power_now;
@@ -108,12 +108,13 @@ pub fn get_time_remaining(battery: Battery, writer: anytype) ! void {
     const seconds_total = (minutes_total - minutes_rounded) * 60;
     const seconds: u8   = @intFromFloat(seconds_total);
 
+    return
     if (hours != 0)
-        try writer.print("{d} h {d:.2} m {d:.2} s", .{hours, minutes, seconds})
+        writer.print("{d} h {d:.2} m {d:.2} s", .{hours, minutes, seconds})
     else if (minutes != 0)
-        try writer.print("{d} m {d:.2} s", .{minutes, seconds})
+        writer.print("{d} m {d:.2} s", .{minutes, seconds})
     else
-        try writer.print("{d} s", .{seconds});
+        writer.print("{d} s", .{seconds});
 }
 
 // -------------------------------------------------------------------------- //

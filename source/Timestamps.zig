@@ -26,12 +26,14 @@ bool {
             @branchHint(.unlikely);
             @field(timestamps, field) = timestamp_new;
             return true;
-        } else {
+        }
+        else {
             //= Update interval not reached yet
             @branchHint(.likely);
             return false;
         }
-    } else {
+    }
+    else {
         //= This code will only ever be reached on the first iteration.
         @branchHint(.cold);
         @field(timestamps, field) = timestamp_new;

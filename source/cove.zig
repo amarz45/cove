@@ -27,31 +27,31 @@ pub fn main() ! void {
 
     // CPU
     var cpu_data: modules.Cpu = undefined;
-    const threads: f32 = threads: {
+    const threads: f32 = b: {
         if (!modules_used.cpu) {
-            break :threads undefined;
+            break :b undefined;
         }
         try cpu_data.update_uptime();
-        break :threads @floatFromInt(try std.Thread.getCpuCount());
+        break :b @floatFromInt(try std.Thread.getCpuCount());
     };
 
     // time
-    var local = local: {
+    var local = b: {
         if (!modules_used.time) {
-            break :local undefined;
+            break :b undefined;
         }
         var env = try std.process.getEnvMap(allocator);
         defer env.deinit();
-        break :local try zeit.local(allocator, &env);
+        break :b try zeit.local(allocator, &env);
     };
     defer if (builtin.mode == .Debug and modules_used.time) {
         local.deinit();
     };
 
     // backlight
-    const backlight_dir_name = backlight_dir_name: {
+    const backlight_dir_name = b: {
         if (!modules_used.backlight) {
-            break :backlight_dir_name undefined;
+            break :b undefined;
         }
 
         const cwd = std.fs.cwd();
@@ -63,7 +63,7 @@ pub fn main() ! void {
         var backlight_iter = backlight_base_dir.iterate();
         const backlight_entry = try backlight_iter.next() orelse
             @panic("Backlight directory not found.");
-        break :backlight_dir_name backlight_entry.name;
+        break :b backlight_entry.name;
     };
 
     var result: std.ArrayList(u8) = .init(allocator);

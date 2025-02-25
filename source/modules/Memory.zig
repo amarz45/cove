@@ -31,15 +31,13 @@ fn get_entry(comptime entry: []const u8) ! f32 {
     const close_index = try file.pread(&buf, 0);
     const slice = buf[0..close_index];
 
-    const slice_index = std.mem.indexOf(u8, slice, entry) orelse {
+    const slice_index = std.mem.indexOf(u8, slice, entry) orelse
         @panic("/proc/meminfo: entry ‘"++entry++"’ not found.");
-    };
 
     const slice_no_entry = buf[(slice_index + entry.len)..];
     const slice_no_spaces = std.mem.trimLeft(u8, slice_no_entry, " ");
-    const unit_index = std.mem.indexOfScalar(u8, slice_no_spaces, 'k') orelse {
+    const unit_index = std.mem.indexOfScalar(u8, slice_no_spaces, 'k') orelse
         @panic("/proc/meminfo: unit not found for entry ‘"++entry++"’.");
-    };
     const slice_num = slice_no_spaces[0..(unit_index - 1)];
 
     return std.fmt.parseFloat(f32, slice_num);

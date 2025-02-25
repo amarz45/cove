@@ -21,7 +21,6 @@ memory_used:            Array_memory         = undefined,
 battery_time_remaining: Array_battery_time   = undefined,
 battery_status:         Array_battery_status = undefined,
 
-uptime:                 Array_uptime         = undefined,
 time:                   Array_time           = undefined,
 
 text_index:             u64                  = 0,
@@ -30,7 +29,6 @@ const Array_percent = std.BoundedArray(u8, fmt.percent_len);
 const Array_memory = std.BoundedArray(u8, fmt.memory_len);
 const Array_battery_time = std.BoundedArray(u8, modules.Battery.time_len);
 const Array_battery_status = std.BoundedArray(u8, "Not charging".len);
-const Array_uptime = std.BoundedArray(u8, fmt.time_len);
 const Array_time = std.BoundedArray(u8, 128);
 
 pub fn handle_module(
@@ -46,37 +44,29 @@ pub fn handle_module(
 )
 ! void {
     switch (module) {
-        .separator => {
-            try result.appendSlice(markup.separator);
-        },
-        .text => {
-            try output.update_text(result);
-        },
-        .backlight => {
+        .separator =>
+            try result.appendSlice(markup.separator),
+        .text =>
+            try output.update_text(result),
+        .backlight =>
             try output.update_backlight(
                 result, timestamps, module_intervals.backlight,
                 backlight_dir_name
-            );
-        },
-        .battery => {
+            ),
+        .battery =>
             try output.update_battery(
                 result, timestamps, module_intervals.battery
-            );
-        },
-        .cpu => {
+            ),
+        .cpu =>
             try output.update_cpu(
-                result, timestamps, module_intervals.cpu,
-                cpu_data, threads
-            );
-        },
-        .memory => {
+                result, timestamps, module_intervals.cpu, cpu_data, threads
+            ),
+        .memory =>
             try output.update_memory(
                 result, timestamps, module_intervals.memory
-            );
-        },
-        .time => {
-            try output.update_time(result, local);
-        },
+            ),
+        .time =>
+            try output.update_time(result, local),
     }
 }
 
@@ -98,8 +88,9 @@ pub fn update_backlight(
 ! void {
     const backlight: modules.Backlight = try .init(dir_name);
 
-    const prefix: []const u8 = prefix: {
-        break :prefix if (backlight.percent < 25)
+    const prefix: []const u8 = b: {
+        break :b
+        if (backlight.percent < 25)
             "󰃞"
         else if (backlight.percent < 50)
             "󰃝"
@@ -111,9 +102,7 @@ pub fn update_backlight(
 
     try result.appendSlice(prefix);
 
-    const update_needed = timestamps.is_update_needed(
-        interval, "backlight"
-    );
+    const update_needed = timestamps.is_update_needed(interval, "backlight");
 
     const config = output.config;
     for (config.backlight_list.items) |arg| switch (arg) {
@@ -126,9 +115,8 @@ pub fn update_backlight(
             const array = output.backlight_percent;
             try result.appendSlice(array.constSlice());
         },
-        .text => {
-            try output.append_text(result);
-        },
+        .text =>
+            try output.append_text(result),
         else => {},
     };
 }
@@ -157,9 +145,7 @@ pub fn update_battery(
 
     try result.appendSlice(prefix);
 
-    const update_needed = timestamps.is_update_needed(
-        interval, "battery"
-    );
+    const update_needed = timestamps.is_update_needed(interval, "battery");
 
     const config = output.config;
     for (config.battery_list.items) |arg| switch (arg) {
@@ -196,9 +182,8 @@ pub fn update_battery(
             const array = output.battery_time_remaining;
             try result.appendSlice(array.constSlice());
         },
-        .text => {
-            try output.append_text(result);
-        },
+        .text =>
+            try output.append_text(result),
         else => {},
     };
 }
@@ -213,9 +198,7 @@ pub fn update_memory(
     const memory: modules.Memory = try .init();
     try result.appendSlice("󰍛 ");
 
-    const update_needed = timestamps.is_update_needed(
-        interval, "memory"
-    );
+    const update_needed = timestamps.is_update_needed(interval, "memory");
 
     const config = output.config;
     for (config.memory_list.items) |arg| switch (arg) {
@@ -236,9 +219,8 @@ pub fn update_memory(
             const array = output.memory_total;
             try result.appendSlice(array.constSlice());
         },
-        .text => {
-            try output.append_text(result);
-        },
+        .text =>
+            try output.append_text(result),
         else => {},
     };
 }
@@ -254,22 +236,12 @@ pub fn update_cpu(
 ! void {
     try result.appendSlice("󰘚 ");
 
-    const update_needed = timestamps.is_update_needed(
-        interval, "cpu"
-    );
+    const update_needed = timestamps.is_update_needed(interval, "cpu");
 
     if (update_needed) try cpu.update(threads);
 
     const config = output.config;
     for (config.cpu_list.items) |arg| switch (arg) {
-        .uptime => {
-            if (update_needed) {
-                output.uptime.clear();
-                try fmt.time(output.uptime.writer(), cpu.system_up);
-            }
-            const array = output.uptime;
-            try result.appendSlice(array.constSlice());
-        },
         .used_percent => {
             if (update_needed) {
                 output.cpu_usage.clear();
@@ -278,9 +250,8 @@ pub fn update_cpu(
             const array = output.cpu_usage;
             try result.appendSlice(array.constSlice());
         },
-        .text => {
-            try output.append_text(result);
-        },
+        .text =>
+            try output.append_text(result),
         else => {},
     };
 }
